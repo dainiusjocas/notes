@@ -1,0 +1,36 @@
+# See docs at: https://mystmd.org/guide/frontmatter
+version: 1
+project:
+  id: cbd81583-121e-45a0-9cb1-798304ed0eba
+  title: Labs
+  description: Interesting stuff and brain-dumps
+  toc:
+    - file: index.md
+    - file: README.md
+    - title: Vespa
+      children:
+          - pattern: 'vespa/*.md'
+    - title: Notebooks
+      children:
+        - pattern: 'notebooks/*.ipynb'
+    - title: Scratch
+      hidden: true
+      children:
+        - pattern: 'scratch/*.md'
+  keywords: ["Vespa", "Lucene", "Elasticsearch"]
+  authors: ["Dainius Jocas"]
+  abbreviations:
+    CSS: Cascading Style Sheet
+    NER: Named entity recognition
+    Vespa: VErtical Search Platform Architecture
+  # github:
+  # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
+site:
+  template: book-theme
+  title: Dainius Jocas
+  options:
+    hide_toc: false
+    folders: true
+    logo_text: " ✨✨✨"
+  #   favicon: favicon.ico
+  #   logo: site_logo.png
