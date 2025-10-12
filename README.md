@@ -4,6 +4,9 @@ kernelspec:
   display_name: 'Python 3'
 ---
 
+# notes
+Executable notes on my interests
+
 How to get going?
 ```shell
 brew install imagemagick
