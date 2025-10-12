@@ -6,8 +6,6 @@ kernelspec:
 
 How to get going?
 ```shell
-
-
 brew install imagemagick
 brew install ghostscript
 brew install mactex
