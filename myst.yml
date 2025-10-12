@@ -5,7 +5,7 @@ project:
   title: Labs
   description: Interesting stuff and brain-dumps
   toc:
-    - file: index.md
+#    - file: index.md
     - file: README.md
     - title: Vespa
       children:
