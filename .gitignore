@@ -17,7 +17,7 @@ _build
 __pycache__/
 *.py[codz]
 *$py.class
-
+**/*.iml
 # C extensions
 *.so
 
