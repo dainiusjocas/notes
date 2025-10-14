@@ -17,7 +17,7 @@ _build
 __pycache__/
 *.py[codz]
 *$py.class
-
+**/*.iml
 # C extensions
 *.so
 
@@ -220,3 +220,4 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+notebooks/_*
