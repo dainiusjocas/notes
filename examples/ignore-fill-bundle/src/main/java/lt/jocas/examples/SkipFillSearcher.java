@@ -35,6 +35,7 @@ public class SkipFillSearcher extends Searcher {
             // https://github.com/vespa-engine/vespa/blob/74e5c519e3d392b8ef34ced618fb90c7910adeb9/container-search/src/main/java/com/yahoo/search/Searcher.java#L164
             // whether they are already fetched,
             // thus declaring that for `.fill()` there is nothing to do.
+            // Or this can be set to null, the effect is the same.
             adjustedSummaryClass = PartialSummaryHandler.DEFAULT_CLASS;
         }
         execution.fill(result, adjustedSummaryClass);
