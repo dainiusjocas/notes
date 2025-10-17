@@ -47,6 +47,8 @@ public class MatchFeaturesMapperSearcher extends Searcher {
             String source = result.getQuery().getModel().getSources().iterator().next(); // or maybe from the "restrict" property?
             Schema schema = schemaInfo.schemas().get(source);
             Map<String, Field> schemaFields = schema.fields();
+            if (!hit.fields().containsKey(MF)) continue;
+
             Map<String, Object> fields = hit.fields();
             var mfField = (FeatureData) fields.get(MF);
             for (String featureName : mfField.featureNames()) {
