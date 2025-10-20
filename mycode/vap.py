@@ -22,7 +22,7 @@ def _redeploy(docker: VespaDocker, data, vap: ApplicationPackage = None) -> Vesp
         data=data,
         verify=False,
     )
-    logging.debug("Deploy status code: {}".format(r.status_code))
+    print("Deploy status code: {}".format(r.status_code))
     if r.status_code != 200:
         raise RuntimeError(
             "Deployment failed, code: {}, message: {}".format(
