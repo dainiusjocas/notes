@@ -1,29 +1,29 @@
 package lt.jocas.examples;
 
-import com.yahoo.prelude.fastsearch.PartialSummaryHandler;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.yahoo.search.Query;
 import com.yahoo.search.Result;
 import com.yahoo.search.Searcher;
 import com.yahoo.search.result.FeatureData;
+import com.yahoo.search.result.Hit;
 import com.yahoo.search.schema.Field;
 import com.yahoo.search.schema.Schema;
 import com.yahoo.search.schema.SchemaInfo;
 import com.yahoo.search.searchchain.Execution;
 import com.yahoo.tensor.Tensor;
 import com.yahoo.tensor.TensorAddress;
-import com.yahoo.tensor.TensorType;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-
-import static com.yahoo.prelude.fastsearch.PartialSummaryHandler.PRESENTATION;
 
 public class MatchFeaturesMapperSearcher extends Searcher {
 
     private final static String MF = "matchfeatures";
+    // From here https://docs.vespa.ai/en/exposing-schema-information.html
     private final SchemaInfo schemaInfo;
+    private final JsonNodeFactory jsonNodeFactory = JsonNodeFactory.instance;
 
     @Inject
     public MatchFeaturesMapperSearcher(SchemaInfo schemaInfo) {
@@ -35,66 +35,95 @@ public class MatchFeaturesMapperSearcher extends Searcher {
         return execution.search(query);
     }
 
-    private static final Set<String> IGNORED_SUMMARY_FIELDS = Set.of(MF);
-
-    private boolean isFillIgnorable(String summaryClass, Result result) {
-        return PRESENTATION.equals(summaryClass) &&
-                result.getQuery().getPresentation().getSummaryFields().equals(IGNORED_SUMMARY_FIELDS);
+    private boolean isMatchFeaturesInSummary(Result result) {
+        return result.getQuery().getPresentation().getSummaryFields().contains(MF);
     }
 
-    public Result fromMatchFeatures(Result result) {
-        for (var hit : result.hits().asList()) {
-            String source = result.getQuery().getModel().getSources().iterator().next(); // or maybe from the "restrict" property?
-            Schema schema = schemaInfo.schemas().get(source);
-            Map<String, Field> schemaFields = schema.fields();
-            if (!hit.fields().containsKey(MF)) continue;
+    private Object arrayFromTensorLabels(Tensor tensor) {
+        Set<TensorAddress> tensorAddresses = tensor.cells().keySet();
+        List<TextNode> labels = tensorAddresses.stream()
+                .map(tensorAddress -> tensorAddress.label(0))
+                .map(jsonNodeFactory::textNode)
+                .toList();
+        return jsonNodeFactory.arrayNode().addAll(labels);
+    }
 
-            Map<String, Object> fields = hit.fields();
-            var mfField = (FeatureData) fields.get(MF);
-            for (String featureName : mfField.featureNames()) {
-                Tensor tensor = mfField.getTensor(featureName);
-                TensorType type = tensor.type();
-                if (type.rank() == 0) {
-                    hit.setField(featureName, tensor.asDouble());
-                } else if (type.rank() == 1) {
-                    if (schemaFields.containsKey(featureName)
-                            && schemaFields.get(featureName).type().kind().equals(Field.Type.Kind.TENSOR)) {
-                        hit.setField(featureName, tensor);
-                    } else {
-                        Set<TensorAddress> tensorAddresses = tensor.cells().keySet();
-                        if (tensorAddresses.size() == 1) {
-                            String label = tensorAddresses.iterator().next().label(0);
-                            hit.setField(featureName, label);
-                        } else {
-                            List<String> labels = tensorAddresses.stream()
-                                    .map(tensorAddress -> tensorAddress.label(0))
-                                    .toList();
-                            hit.setField(featureName, labels);
-                        }
-                    }
+    private Object fromTensor(Tensor tensor, Field.Type.Kind kind) {
+        Set<TensorAddress> tensorAddresses = tensor.cells().keySet();
 
-                }
-            }
-            hit.removeField(MF);
+        if (tensor.type().rank() == 0)
+            return tensor.asDouble();
+
+        if (tensorAddresses.size() == 1) {
+            return tensorAddresses.iterator().next().label(0);
         }
-        return result;
+        return arrayFromTensorLabels(tensor);
+    }
+
+    private boolean boolFromTensor(Tensor tensor) {
+        Double value = tensor.cells().values().iterator().next();
+        return !value.equals(0.0d);
+    }
+
+    private long longFromTensor(Tensor tensor) {
+        Set<TensorAddress> tensorAddresses = tensor.cells().keySet();
+        String label = tensorAddresses.iterator().next().label(0);
+        return Long.parseLong(label);
+    }
+
+    private void handleHit(Hit hit, Schema schema) {
+        var matchFeatures = (FeatureData) hit.fields().get(MF);
+        for (String featureName : matchFeatures.featureNames()) {
+            Tensor tensor = matchFeatures.getTensor(featureName);
+
+            if (!schema.fields().containsKey(featureName)) {
+                // Schema does not have a named field then just remap
+                hit.setField(featureName, tensor);
+            } else {
+                // Schema contains a named field then make values correctly renderable
+                Field.Type.Kind kind = schema.fields().get(featureName).type().kind();
+                var value = switch (kind) {
+//                        case ANNOTATIONREFERENCE -> null;
+                    case ARRAY -> arrayFromTensorLabels(tensor);
+                    case BOOL -> boolFromTensor(tensor);
+                    case BYTE, INT, LONG -> longFromTensor(tensor);
+                    case FLOAT, DOUBLE -> tensor.asDouble(); // no need to wrap it
+//                        case MAP -> null;
+//                        case POSITION -> null;
+//                        case PREDICATE -> null;
+//                        case RAW -> null;
+//                        case REFERENCE -> null;
+                    case STRING -> fromTensor(tensor, kind);
+//                        case STRUCT -> null;
+                    case TENSOR -> tensor;
+//                        case URL -> null;
+//                        case WEIGHTEDSET -> null;
+                    default -> tensor;
+                };
+                hit.setField(featureName, value);
+            }
+        }
+        hit.removeField(MF);
+    }
+
+    private void fromMatchFeatures(Result result) {
+        // If matchfeatures are not asked, then we have nothing to do
+        if (!isMatchFeaturesInSummary(result)) return;
+
+        Set<String> restrict = result.getQuery().getModel().getRestrict();
+        // If more than one schema is searched, then we have to have the sddocname
+        // in each hit to properly resolve, which requires summary filling...
+        if (restrict.size() != 1) return;
+
+        String schemaName = restrict.iterator().next();
+        Schema schema = schemaInfo.schemas().get(schemaName);
+
+        result.hits().forEach(hit -> handleHit(hit, schema));
     }
 
     @Override
     public void fill(Result result, String summaryClass, Execution execution) {
-        var adjustedSummaryClass = summaryClass;
-        if (isFillIgnorable(summaryClass, result)) {
-            // The `default` class works here because later Searcher class Vespa
-            // checks that only some fields are needed
-            // https://github.com/vespa-engine/vespa/blob/5dbf6c9d7feecd452dff7d494c540b0d31cf02bc/container-search/src/main/java/com/yahoo/prelude/fastsearch/PartialSummaryHandler.java#L239-L248
-            // and creates synthetic names for which it checks
-            // https://github.com/vespa-engine/vespa/blob/74e5c519e3d392b8ef34ced618fb90c7910adeb9/container-search/src/main/java/com/yahoo/search/Searcher.java#L164
-            // whether they are already fetched,
-            // thus declaring that for `.fill()` there is nothing to do.
-            // Or this can be set to null, the effect is the same.
-            adjustedSummaryClass = PartialSummaryHandler.DEFAULT_CLASS;
-        }
-        result = fromMatchFeatures(result);
-        execution.fill(result, adjustedSummaryClass);
+        execution.fill(result, summaryClass);
+        fromMatchFeatures(result);
     }
 }
