@@ -12,7 +12,7 @@
     <bundle-plugin.failOnWarnings>false</bundle-plugin.failOnWarnings>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <test.hide>true</test.hide>
-    <vespa.version>8.588.8</vespa.version>
+    <vespa.version>8.596.20</vespa.version>
   </properties>
 
   <dependencies>
@@ -21,6 +21,12 @@
       <artifactId>application</artifactId>
       <version>${vespa.version}</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.yahoo.vespa</groupId>
+      <artifactId>container-search</artifactId>
+      <version>${vespa.version}</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 
