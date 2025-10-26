@@ -23,3 +23,14 @@ In the logs there is:
 ```plain
 [2025-10-22 07:00:41.606] ERROR   container        Container.com.yahoo.container.jdisc.ConfiguredApplication	Reconfiguration failed, your application package must be fixed, unless this is a JNI reload issue: When resolving dependencies of 'lt.jocas.examples.MySearchHandler': No global component of class com.yahoo.search.searchchain.ExecutionFactory to inject into component 'lt.jocas.examples.MySearchHandler'.\nexception=\njava.lang.RuntimeException: When resolving dependencies of 'lt.jocas.examples.MySearchHandler'\nCaused by: java.lang.IllegalStateException: No global component of class com.yahoo.search.searchchain.ExecutionFactory to inject into component 'lt.jocas.examples.MySearchHandler'.\n
 ```
+
+UPDATE: the solution is to add the following to pom.xml:
+```xml
+<dependency>
+  <groupId>com.yahoo.vespa</groupId>
+  <artifactId>container</artifactId>
+  <version>${vespa.version}</version>
+  <scope>provided</scope>
+</dependency>
+```
+And VAP is properly deployed.
