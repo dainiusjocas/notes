@@ -3,12 +3,12 @@
   <container id="container" version="1.0">
     <document-processing/>
     <document-api/>
-    <search/>
+<!--    <search/>-->
+    <handler bundle="custom-warmup-bundle" id="lt.jocas.examples.CustomSearchHandler">
+      <binding>http://*/search/*</binding>
+    </handler>
     <handler bundle="custom-warmup-bundle" id="lt.jocas.examples.MySearchHandler">
       <binding>http://*/search2/</binding>
-    </handler>
-    <handler bundle="custom-warmup-bundle" id="lt.jocas.examples.CustomSearchHandler">
-      <binding>http://*/search3/</binding>
     </handler>
   </container>
   <content id="content" version="1.0">

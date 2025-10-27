@@ -12,4 +12,6 @@ schema lucene {
     fieldset default {
         fields: mytext
     }
+
+    rank-profile demo inherits unranked {}
 }
