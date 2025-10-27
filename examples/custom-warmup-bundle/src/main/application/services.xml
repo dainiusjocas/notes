@@ -7,6 +7,9 @@
     <handler bundle="custom-warmup-bundle" id="lt.jocas.examples.MySearchHandler">
       <binding>http://*/search2/</binding>
     </handler>
+    <handler bundle="custom-warmup-bundle" id="lt.jocas.examples.CustomSearchHandler">
+      <binding>http://*/search3/</binding>
+    </handler>
   </container>
   <content id="content" version="1.0">
     <min-redundancy>1</min-redundancy>
