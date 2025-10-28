@@ -3,7 +3,7 @@
   <container id="container" version="1.0">
     <document-processing/>
     <document-api/>
-    <search/>
+<!--    <search/>-->
     <handler bundle="warmup-bundle" id="lt.jocas.examples.MySearchHandler">
       <binding>http://*/search/</binding>
     </handler>
