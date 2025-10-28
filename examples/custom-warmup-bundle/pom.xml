@@ -31,7 +31,7 @@
     <dependency>
       <groupId>com.yahoo.vespa</groupId>
       <artifactId>container-search</artifactId>
-      <version>8.599.6</version>
+      <version>${vespa.version}</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
