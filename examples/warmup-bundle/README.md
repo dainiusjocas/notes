@@ -9,7 +9,7 @@ docker run --rm --detach \
   --publish 127.0.0.1:8080:8080 \
   --publish 127.0.0.1:19071:19071 \
   --publish 127.0.0.1:19050:19050 \
-  vespaengine/vespa:8.596.20
+  vespaengine/vespa:8.600.35
 ```
 
 Packaging:
@@ -34,3 +34,9 @@ UPDATE: the solution is to add the following to pom.xml:
 </dependency>
 ```
 And VAP is properly deployed.
+
+
+```shell
+echo '{"id":"id:lucene:lucene::174422292","fields":{"mytext": "1759637724"}}' | vespa feed -
+vespa query 'select * from sources * where true limit 1' 'ranking=unranked' 'timeout=5s' -t local --verbose
+```
