@@ -28,6 +28,18 @@ Check logs:
 docker logs vespa-graalvm
 ```
 
+Check the JVM:
+```text
+curl -s 0:19092/prometheus/v1/values\?consumer=vespa | grep jvm
+# HELP jdisc_jvm_last
+# TYPE jdisc_jvm_last untyped
+jdisc_jvm_last{metrictype="standard",instance="container-clustercontroller",home="/usr/lib/jvm/graalvm-java25",version="25.0.1+8-LTS-jvmci-b01",vendor="Oracle Corporation",arch="aarch64",clustername="cluster-controllers",vespa_service="vespa_container_clustercontroller",} 25.0 1761683328840
+jdisc_jvm_last{metrictype="standard",instance="container",home="/usr/lib/jvm/graalvm-java25",version="25.0.1+8-LTS-jvmci-b01",vendor="Oracle Corporation",arch="aarch64",clustername="container",vespa_service="vespa_container",} 25.0 1761683328840
+jdisc_jvm_last{metrictype="standard",instance="configserver",home="/usr/lib/jvm/graalvm-java25",version="25.0.1+8-LTS-jvmci-b01",vendor="Oracle Corporation",arch="aarch64",vespa_service="vespa_configserver",} 25.0 1761683328840
+jdisc_jvm_last{metrictype="standard",instance="logserver-container",home="/usr/lib/jvm/graalvm-java25",version="25.0.1+8-LTS-jvmci-b01",vendor="Oracle Corporation",arch="aarch64",clustername="logs",vespa_service="vespa_logserver_container",} 25.0 1761683328840
+jdisc_jvm_last{metrictype="standard",instance="metricsproxy-container",home="/usr/lib/jvm/graalvm-java25",version="25.0.1+8-LTS-jvmci-b01",vendor="Oracle Corporation",arch="aarch64",clustername="metrics",vespa_service="vespa_metricsproxy_container",} 25.0 1761683328840
+```
+
 Feed and query docs:
 ```shell
 echo '{"id":"id:lucene:lucene::1","fields":{"mytext": "vespa"}}' | vespa feed -
