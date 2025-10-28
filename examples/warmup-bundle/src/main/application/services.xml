@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <services version="1.0">
   <container id="container" version="1.0">
+    <config name="search.config">
+      <clusterName>content</clusterName>
+    </config>
     <document-processing/>
     <document-api/>
 <!--    <search/>-->
