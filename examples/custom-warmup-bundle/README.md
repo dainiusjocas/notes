@@ -9,7 +9,7 @@ docker run --rm --detach \
   --publish 127.0.0.1:8080:8080 \
   --publish 127.0.0.1:19071:19071 \
   --publish 127.0.0.1:19050:19050 \
-  vespaengine/vespa:8.599.6
+  vespaengine/vespa:8.600.35
 ```
 
 Packaging:
@@ -263,3 +263,47 @@ java.lang.IllegalStateException: No suitable groups to dispatch query. Rejected:
 
 ```
 Yes, config is not there. So, I need to find a way to get it from the rest of the services.xml.
+
+UPDATE(2025-10-29):
+
+It is enough to override bindings so that the `SearchHandler` would not be needed and we can keep `<search/>` in the `services.xml`.
+
+```xml
+<search/>
+<handler bundle="custom-warmup-bundle" id="lt.jocas.examples.CustomSearchHandler">
+  <binding>http://*/search</binding>
+  <binding>http://*/search/*</binding>
+</handler>
+```
+
+Yeah, both bindings are needed.
+
+The fact that `SearchHandler` is not created can be observed by checking metrics for request count of the `unranked` rank profile:
+
+```shell
+watch -n 1 'curl -s 0:8080/metrics/v2/values\?consumer=vespa | jq ".nodes[0] | .services[]" |  grep "unranked" -A 10 -B 10'
+```
+
+```text
+        "content.proton.documentdb.matching.rank_profile.rerank_time.count": 0,
+        "content.proton.documentdb.matching.rank_profile.rerank_time.max": 0,
+        "content.proton.documentdb.matching.rank_profile.query_setup_time.sum": 0,
+        "content.proton.documentdb.matching.rank_profile.query_setup_time.count": 0,
+        "content.proton.documentdb.matching.rank_profile.query_setup_time.max": 0,
+        "content.proton.documentdb.matching.rank_profile.query_latency.sum": 0,
+        "content.proton.documentdb.matching.rank_profile.query_latency.count": 0,
+        "content.proton.documentdb.matching.rank_profile.query_latency.max": 0
+      },
+      "dimensions": {
+        "rankProfile": "unranked",
+        "documenttype": "lucene",
+        "serviceId": "searchnode"
+      }
+    },
+    {
+      "values": {
+        "content.proton.documentdb.ready.index.disk_usage.average": 0
+      },
+      "dimensions": {
+        "documenttype": "lucene",
+```

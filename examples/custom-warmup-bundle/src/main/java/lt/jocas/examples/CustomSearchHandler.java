@@ -92,7 +92,7 @@ public class CustomSearchHandler extends ThreadedHttpRequestHandler {
         this.maxThreads = examineExecutor(threadpool.executor());
         this.numRequestsLeftToTrace = new AtomicLong(config.numQueriesToTraceOnDebugAfterConstruction());
 
-        System.out.println(">>>Look ma, no warmup!");
+        System.out.println(">>>Look ma, no warmup!<<<");
     }
 
     private static int examineExecutor(Executor executor) {
