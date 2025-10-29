@@ -11,4 +11,5 @@ dependencies = [
     "jupyter-server>=2.17.0",
     "jupyterlab>=4.4.7",
     "mystmd==1.6.3",
+    "matplotlib".
 ]
