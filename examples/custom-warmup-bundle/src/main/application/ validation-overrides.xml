@@ -1,0 +1,4 @@
+<validation-overrides>
+  <allow until='2025-10-23'>schema-removal</allow>
+  <allow until='2025-10-23'>content-cluster-removal</allow>
+</validation-overrides>
