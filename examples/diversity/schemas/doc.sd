@@ -1,0 +1,25 @@
+schema doc {
+
+    document doc {
+        field myattr type string {
+            indexing: attribute
+        }
+        field mytext type string {
+            indexing: summary | index
+        }
+    }
+
+    fieldset default {
+        fields: mytext
+    }
+
+    document-summary default {
+        summary myattrs { source: myattr}
+    }
+
+    rank-profile dummy {
+        first-phase {
+            expression: attribute(myattr)
+        }
+    }
+}

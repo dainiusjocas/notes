@@ -7,7 +7,15 @@ kernelspec:
 # notes
 Executable notes on my interests
 
-How to get going?
+## How to get going?
+
+Install dependencies:
+```shell
+brew install uv
+brew install colima
+```
+
+Install system level dependencies for exporting to PDF:
 ```shell
 brew install imagemagick
 brew install ghostscript
@@ -15,6 +23,15 @@ brew install mactex
 brew install typst 
 ```
 
+Editable [install](https://setuptools.pypa.io/en/latest/userguide/development_mode.html) libs under `src`.
+
+```shell
+uv sync
+source .venv/bin/activate
+uv pip install -e .
+```
+
+## Fooling around
 
 aaaa
 % Embed both the input and output

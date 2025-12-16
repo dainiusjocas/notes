@@ -818,7 +818,7 @@ wheels = [
 
 [[package]]
 name = "jupyter-book"
-version = "2.0.2"
+version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ipykernel" },
@@ -827,9 +827,9 @@ dependencies = [
     { name = "nodeenv" },
     { name = "platformdirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9c/a5/17b115c2d890352871eec31212702f402a67503adbce9f739b5a89f84ec3/jupyter_book-2.0.2.tar.gz", hash = "sha256:36e1428ad85a70e500513793edff3be83c4f036f80eb67bb909180914f50094b", size = 14439814, upload-time = "2025-11-03T17:49:57.327Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/ef/618a3080c9c2f76f6d17212b7954db448d7f92da6459450a6acce1e0d596/jupyter_book-2.1.0.tar.gz", hash = "sha256:f42b6f264e6e270b07362f4430ef671edccbb1be36cd0872afd231c642a4ba7e", size = 14440795, upload-time = "2025-12-05T13:16:57.496Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/46/0d/0a6fdf9587634452b9ced1de89280a3daeb1fee16878ca442dfe76c9b0a8/jupyter_book-2.0.2-py3-none-any.whl", hash = "sha256:7ccbb5f00dc55d172f148eae179d257e4cfe815ee297050553733d13018cae57", size = 2600900, upload-time = "2025-11-03T17:49:55.137Z" },
+    { url = "https://files.pythonhosted.org/packages/69/0a/066cacdbe5fa68a39df245cd91db2a77e7485cb4c94d8c48cc3e8ed02e45/jupyter_book-2.1.0-py3-none-any.whl", hash = "sha256:cdf54323e0b5c0e1d9a6972742ac2dbfea9f7617e20f58113dc25cc85b7ac4d9", size = 2599900, upload-time = "2025-12-05T13:16:54.292Z" },
 ]
 
 [[package]]
@@ -1002,10 +1002,10 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "ipykernel", specifier = ">=6.30.1" },
-    { name = "jupyter-book", specifier = "==2.0.2" },
+    { name = "jupyter-book", specifier = "==2.1.0" },
     { name = "jupyter-server", specifier = ">=2.17.0" },
     { name = "jupyterlab", specifier = ">=4.4.7" },
-    { name = "mystmd", specifier = "==1.6.4" },
+    { name = "mystmd", specifier = "==1.7.1" },
     { name = "pyvespa", specifier = "==0.62" },
 ]
 
@@ -1212,15 +1212,15 @@ wheels = [
 
 [[package]]
 name = "mystmd"
-version = "1.6.4"
+version = "1.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nodeenv" },
     { name = "platformdirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a2/77/3c02edbedc6366de73982ca2fb117bf27e64294bcf347b23173a3d97de53/mystmd-1.6.4.tar.gz", hash = "sha256:7b9492838869ddcd56dbef493c76ed3ef9a7757b402da40f6c4c690291b9e209", size = 2779761, upload-time = "2025-11-03T17:12:04.601Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/b1/b129b0efe29c73b0e9bdaf556bd53d2371d51c9e922869b1b9c542c74ee2/mystmd-1.7.1.tar.gz", hash = "sha256:ae9a49a7c25aa9a79bc4ef921ffcf20a163f082e76592b296666ba6a6f9a4133", size = 2778812, upload-time = "2025-12-10T23:37:34.965Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c4/63/5187a0114326ceaff6324c7a9a8d39b248be03e033c5f1e4e97e5d1ac50e/mystmd-1.6.4-py3-none-any.whl", hash = "sha256:3b0d2bf31953ec0043fca2e89b40c7cfb041fb73af10bb2c2e687be1d1a16f59", size = 2811135, upload-time = "2025-11-03T17:12:02.486Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/77/7abd13ca8304ec1d8832c23455107f4dc44c4684e56e1578365065739504/mystmd-1.7.1-py3-none-any.whl", hash = "sha256:c85019ac9d9e238d2ddd314f295e07a9950c671f759b497c85b6d260444628d4", size = 2810038, upload-time = "2025-12-10T23:37:33.305Z" },
 ]
 
 [[package]]

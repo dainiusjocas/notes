@@ -1,14 +1,14 @@
 [project]
 name = "lab"
 version = "0.1.0"
-description = "Add your description here"
+description = "Experiments with search systems"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "pyvespa==0.62",
     "ipykernel>=6.30.1",
-    "jupyter-book==2.0.2",
+    "jupyter-book==2.1.0",
     "jupyter-server>=2.17.0",
     "jupyterlab>=4.4.7",
-    "mystmd==1.6.4",
+    "mystmd==1.7.1",
 ]
