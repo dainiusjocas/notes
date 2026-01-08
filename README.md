@@ -13,6 +13,9 @@ brew install imagemagick
 brew install ghostscript
 brew install mactex
 brew install typst 
+
+
+pip install --editable .
 ```
 
 
