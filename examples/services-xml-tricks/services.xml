@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<services version="1.0" xmlns:deploy="vespa">
+  <container id="container" version="1.0">
+    <document-processing/>
+    <document-api/>
+    <search/>
+  </container>
+  <content id="content" version="1.0">
+    <redundancy>1</redundancy>
+    <documents>
+      <document type="doc1" mode="index"/>
+      <document deploy:environment="dev prod" type="doc2" mode="index"/>
+      <document deploy:environment="dev" type="doc3" mode="index"/>
+    </documents>
+  </content>
+</services>
