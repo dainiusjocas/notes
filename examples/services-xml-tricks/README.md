@@ -60,7 +60,7 @@ It seems that if we do services.xml variants the default somehow no longer appli
 ## Trick local vespa into an instance name
 
 ```shell
-docker run \
+docker run -e VESPA_ENVIRONMENT=dev -e VESPA_INSTANCE=demo \
   --detach \
   --rm \
   --name vespa-demo \
@@ -100,6 +100,8 @@ curl -X PUT \
 #=> {"deploy":{"from":"unknown","timestamp":1768378663140,"internalRedeploy":false},"application":{"id":"default:default:default","checksum":"b7cee46b82e2c57dd2430f25661f6e65","generation":2,"previousActiveGeneration":0},"tenant":"default","session-id":"2","message":"Session 2 for tenant 'default' activated.","url":"http://localhost:19071/application/v2/tenant/default/application/default/environment/prod/region/default/instance/demo"}%   
 
 curl "http://localhost:8080/ApplicationStatus"
+
+http://*/application/v2/tenant/*/application/*/environment/*/region/*/instance/*"
 
 
 
@@ -145,3 +147,33 @@ curl -H "Content-Type: application/json" \
 --data '{"yql" : "select * from sources * where true", "model.restrict":"doc4"}' \
 http://localhost:8080/search/ | jq .
 ```
+
+
+```shell
+vespa-zkcli ls /config/v2/tenants/default/applications
+Connecting to localhost:2181
+
+WATCHER::
+
+WatchedEvent state:SyncConnected type:None path:null zxid: -1
+[default:default:default, default:default:demo]
+
+
+
+[vespa@04da1e36c5d5 /]$ ls /opt/vespa/var/db/vespa/search/cluster.content/n0/documents/
+doc2  doc3
+
+
+http://localhost:19071/application/v2/host/04da1e36c5d5
+```
+
+
+vespa-zkcli get /config/v2/tenants/default/sessions/3/meta
+Connecting to localhost:2181
+
+WATCHER::
+
+WatchedEvent state:SyncConnected type:None path:null zxid: -1
+{"deploy":{"from":"unknown","timestamp":1768386865840,"internalRedeploy":false},"application":{"id":"default:default:default","checksum":"ba1b4dd7b78a6ed63537f3b0459c8e03","generation":3,"previousActiveGeneration":0}}
+
+^ why `default:default:default`?????
