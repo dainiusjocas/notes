@@ -168,7 +168,14 @@ http://localhost:19071/application/v2/host/04da1e36c5d5
 ```
 
 
-vespa-zkcli get /config/v2/tenants/default/sessions/3/meta
+[vespa@04da1e36c5d5 /]$ vespa-zkcli get /config/v2/tenants/default/sessions/3/applicationId
+Connecting to localhost:2181
+
+WATCHER::
+
+WatchedEvent state:SyncConnected type:None path:null zxid: -1
+default:default:demo
+[vespa@04da1e36c5d5 /]$ vespa-zkcli get /config/v2/tenants/default/sessions/3/meta
 Connecting to localhost:2181
 
 WATCHER::
