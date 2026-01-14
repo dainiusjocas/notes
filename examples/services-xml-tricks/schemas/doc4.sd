@@ -1,0 +1,3 @@
+schema doc4 inherits doc1 {
+    document doc4 inherits doc1 {}
+}
