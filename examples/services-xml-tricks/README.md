@@ -121,3 +121,27 @@ curl -X PUT \
 
 curl "http://localhost:8080/ApplicationStatus"
 ```
+
+
+```shell
+vespa query 'select * from sources content  where true' -t http://localhost:8080
+```
+
+However, with curl we can work.
+Unfortunately, the instance variant is not picked up.
+
+```shell
+curl -H Content-Type:application/json -d '{"fields": {"my_id": 2}}' \
+http://localhost:8080/document/v1/doc2/doc2/docid/1
+
+curl -H "Content-Type: application/json" \
+--data '{"yql" : "select * from sources * where true", "model.restrict":"doc2"}' \
+http://localhost:8080/search/ | jq .
+
+curl -H Content-Type:application/json -d '{"id": "id:doc4:doc4::1", "fields": {"my_id": 2}}' \
+http://localhost:8080/document/v1/doc4/doc4/docid/1
+
+curl -H "Content-Type: application/json" \
+--data '{"yql" : "select * from sources * where true", "model.restrict":"doc4"}' \
+http://localhost:8080/search/ | jq .
+```

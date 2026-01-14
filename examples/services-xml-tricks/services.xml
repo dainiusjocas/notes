@@ -11,7 +11,7 @@
       <document type="doc1" mode="index"/>
       <document deploy:environment="dev prod" type="doc2" mode="index"/>
       <document deploy:environment="dev" type="doc3" mode="index"/>
-      <document deploy:instance="demo" type="doc4" mode="index"/>
+      <document deploy:environment="dev prod" deploy:instance="demo" type="doc4" mode="index"/>
     </documents>
   </content>
 </services>
