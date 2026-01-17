@@ -84,7 +84,7 @@ E.g. we can take an application deployed from Vespa Cloud and deploy it to a sel
 
 ### Tricks to speed up CD/CD
 
-Instead of using Vanilla vespa docker we could try leveraging docker image that already has some previous application versions deployed. This shaves about ~20 seconds off the time required to run the tests.
+Instead of using Vanilla Vespa Docker, we could try leveraging a Docker image that already has some previous application versions deployed. This shaves about ~20 seconds off the time required to run the tests.
 
 There are a couple of complications:
 1. Where to store the image?
@@ -95,8 +95,33 @@ There are a couple of complications:
 Failing to specify (2) means yet another dance of `observe failure -> fix -> commit -> push -> wait`: a waste of time.
 As far as I know, there is no way to start Vespa that would allow disabling all validations.
 To address it, we can leverage a neat trick: provide a `validation-overrides.xml` file with all breaking changes allowed for today.
-This requires generating the file with today's date and a list of all possible `allow` entries.
-TODO: shell command to create such a file.
+This requires generating the file with today's date and a list of all [possible](https://github.com/vespa-engine/vespa/blob/54fb2825aef733095e59e9f197cf292e80c9263e/config-model-api/src/main/java/com/yahoo/config/application/api/ValidationId.java#L11) `allow` entries.
+```shell
+TODAY=$(date +"%Y-%m-%d") && echo \
+"<validation-overrides>
+  <allow until='$TODAY'>access-control</allow>
+  <allow until='$TODAY'>certificate-removal</allow>
+  <allow until='$TODAY'>cluster-size-reduction</allow>
+  <allow until='$TODAY'>config-model-version-mismatch</allow>
+  <allow until='$TODAY'>content-cluster-removal</allow>
+  <allow until='$TODAY'>schema-removal</allow>
+  <allow until='$TODAY'>data-plane-token-removal</allow>
+  <allow until='$TODAY'>deployment-removal</allow>
+  <allow until='$TODAY'>field-type-change</allow>
+  <allow until='$TODAY'>global-document-change</allow>
+  <allow until='$TODAY'>global-endpoint-change</allow>
+  <allow until='$TODAY'>hnsw-settings-change</allow>
+  <allow until='$TODAY'>indexing-change</allow>
+  <allow until='$TODAY'>indexing-mode-change</allow>
+  <allow until='$TODAY'>paged-setting-removal</allow>
+  <allow until='$TODAY'>redundancy-increase</allow>
+  <allow until='$TODAY'>redundancy-one</allow>
+  <allow until='$TODAY'>resources-reduction</allow>
+  <allow until='$TODAY'>skip-old-config-models</allow>
+  <allow until='$TODAY'>tensor-type-change</allow>
+  <allow until='$TODAY'>zone-endpoint-change</allow>
+</validation-overrides>" > validation-overrides.xml
+```
 
 What if deployment still requires either a restart, reindexing or refeeding?
 Reindexing or refeeding can be ignored if the base docker has no data.
