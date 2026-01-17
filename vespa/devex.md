@@ -1,50 +1,71 @@
-# Vespa DevEx: briging the gap between laptop and production
+# Vespa DevEx: bridging the gap between laptop and production
 
 ## TL;DR
 
-Leveraging Vespa's `instance` can help the application's journey from a laptop to production.
+Leveraging Vespa `services.xml` variants with the `instance` is a neat way to improve DevEx.
 
-## For the impatient
+## Just show me the code
 
-In the `services.xml` you can have variants like:
+E.g. we want to have `doc1` schema deployed in `prod` and `dev` instances, but `doc2` schema deployed only to `dev`.
+Then `services.xml` variants can be:
 ```shell
-
+<content id="content" version="1.0">
+<redundancy>1</redundancy>
+<documents deploy:instance="prod">
+  <document type="doc1" mode="index"/>
+</documents>
+<documents deploy:instance="dev">
+  <document type="doc1" mode="index"/>
+  <document type="doc2" mode="index"/>
+</documents>
+</content>
 ```
 
-This setup when deployed to a local single node Vespa system with this command:
+This command deploys `prod` instance:
 ```shell
-
+curl -X POST \
+        --header "Content-Type:application/zip" \
+                 --data-binary @application.zip \
+    "http://localhost:19071/application/v2/tenant/default/prepareandactivate?instance=prod"
 ```
-Properly creates a Vespa application as if only the `deploy:instance="local"` variant was specified.
+Properly creates a Vespa application as if only the `deploy:instance="prod"` variant was specified.
 
 And when deployed to the multi-node self-hosted Vespa with
 ```shell
-
+curl -X POST \
+        --header "Content-Type:application/zip" \
+                 --data-binary @application.zip \
+    "http://localhost:19071/application/v2/tenant/default/prepareandactivate?instance=dev"
 ```
 deploys the application as if only the `deploy:insatnce=prod` variant was specified.
 
 ## Abstract
 
-This post aims to show how to increase the velocity and confidence of the Vespa application development.
-Let's see how we can leverage `services.xml` variants and the `instance` part of the application ID.
-Also, describes how to address development against Vespa Cloud or self-hosted Vespa.
-
+This post aims to show how to increase both the velocity and confidence of Vespa application development.
+The combination of `services.xml` variants and the `instance` part of the application ID allows conditional config overrides based on the deployment target in the single file.
+Also, describes how to address development against Vespa Cloud or self-hosted Vespa. 
 
 ## DevEx
 
-### Baselines
+I've seen many different ways how teams attempt to manage Vespa applications: ranging from different applications, targeting only Vespa Cloud, deploy application from a volume mounted to the Vespa docker container, all the way to scripts that stitch files correctly based on the provided environment identifier.
+Also, I hope that you run integration tests, don't you?
 
-Once the Docker image is downloaded, on a laptop it takes ~30 seconds for Vespa to be ready to deploy an application and then for the first deployment an additional ~20 seconds for the endpoints to become available for feeding and querying.
+All of them introduce some compromises: either copying files, brittle scripts, a shared deployment that all tests run against.
+Ideally, we'd like to have a single source of truth and have overrides only where they are needed.
+Let's see how far we can go with current Vespa capabilities.
+
+### Some Baselines
+
+Once the Docker image is downloaded, on a laptop, it takes ~30 seconds for Vespa to be ready to deploy an application and then for the first deployment to converge an additional ~20 seconds until the endpoints become available for feeding and querying.
 Then the following deployments take ~3 seconds to be applied.
-
-This means that we can run an integration tests step in the CI / CD pipeline against a live Vespa application in ~1-2 minutes.
+If you also build maven artifacts, add a some seconds to the mix.
+This means that we could run an integration tests step in the CI / CD pipeline against a live Vespa application in ~1-2 minutes.
 That is an acceptable time to prevent a context change and not to lose the flow.
 
-For a Vespa Cloud dev instance to become ready, it takes ~10 minutes.
+Running parallel CI/CD jobs to test several different configurations is OK.
 
-Vespa Cloud offers an integrated CI/CD pipeline.
-It runs system and staging tests for you before deploying to the production environment.
-All nice, however, it takes about 10-15 minutes for these tests to run because it provisions fresh infrastructure.
+For a Vespa Cloud `dev` environment instance to become ready, it takes ~10 minutes.
+This is a bit too long for a CI/CD pipeline intended to run on each push to the repository.
 
 ## Self-hosted Vespa
 
@@ -141,3 +162,13 @@ Because all child elements inherit deployment variants from their parent tag.
 ## Acknowledgements
 
 Special thanks go to Andread Erikson for his help making the `instance` work for the self-hosted Vespa.
+
+## Vespa Cloud gotchas
+
+Vespa Cloud offers an integrated CI/CD pipeline.
+It runs system and staging tests for you before deploying to the production environment.
+All nice, however, it takes about 10-15 minutes for these tests to run because it provisions fresh infrastructure.
+
+For system and staging tests Vespa Cloud provisions a scaled-down deployment.
+But if you have more than 1 container or content cluster, then it runs 1 node per cluster.
+By setting variants you can run just 1 node for everything and reduce costs. 

@@ -2,6 +2,7 @@
 <services version="1.0" xmlns:deploy="vespa" xmlns:preprocess="properties">
 <!--  DEV env-->
   <admin deploy:instance="dev" version="2.0">
+<!--    The `admin` tag is required when more than one entry in the hosts.xml file-->
     <adminserver hostalias="local0" />
   </admin>
   <container id="container" version="1.0">
