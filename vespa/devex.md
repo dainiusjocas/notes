@@ -54,6 +54,8 @@ All of them introduce some compromises: either copying files, brittle scripts, a
 Ideally, we'd like to have a single source of truth and have overrides only where they are needed.
 Let's see how far we can go with current Vespa capabilities.
 
+Currently, Vespa CLI doesn't support specifying [instance](https://github.com/vespa-engine/vespa/issues/35630).
+
 ### Some Baselines
 
 Once the Docker image is downloaded, on a laptop, it takes ~30 seconds for Vespa to be ready to deploy an application and then for the first deployment to converge an additional ~20 seconds until the endpoints become available for feeding and querying.
