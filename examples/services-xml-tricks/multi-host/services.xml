@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<services version="1.0" xmlns:deploy="vespa" xmlns:preprocess="?">
-<!--  Verbatim admin part under an instance to be ready for PROD settings-->
+<services version="1.0" xmlns:deploy="vespa" xmlns:preprocess="properties">
+<!--  DEV env-->
   <admin deploy:instance="dev" version="2.0">
     <adminserver hostalias="local0" />
   </admin>
@@ -8,10 +8,11 @@
     <document-processing/>
     <document-api/>
     <search/>
-<!--    <nodes>-->
-<!--      <jvm options="-Xms32M -Xmx128M"/> &lt;!&ndash; Added only to shrink memory for testing - remove before real use &ndash;&gt;-->
-<!--      <node hostalias="local0" />-->
-<!--    </nodes>-->
+    <nodes deploy:instance="prod">
+      <jvm options="-Xms32M -Xmx128M"/> <!-- Added only to shrink memory for testing - remove before real use -->
+      <node hostalias="node4" />
+      <node hostalias="node5" />
+    </nodes>
   </container>
   <content deploy:instance="dev" id="content" version="1.0">
     <redundancy>1</redundancy>
@@ -19,8 +20,43 @@
       <document type="doc1" mode="index"/>
       <document type="doc2" mode="index"/>
     </documents>
-<!--    <nodes>-->
-<!--      <node hostalias="local0" distribution-key="0" />-->
-<!--    </nodes>-->
+  </content>
+
+<!--  PROD only settings-->
+  <admin deploy:instance="prod" version="2.0">
+    <configservers>
+      <configserver hostalias="node0" />
+      <configserver hostalias="node1" />
+      <configserver hostalias="node2" />
+    </configservers>
+    <cluster-controllers>
+      <cluster-controller hostalias="node0" jvm-options="-Xms32M -Xmx64M" /> <!-- jvm-options added only to shrink memory for testing - remove before real use -->
+      <cluster-controller hostalias="node1" jvm-options="-Xms32M -Xmx64M" />
+      <cluster-controller hostalias="node2" jvm-options="-Xms32M -Xmx64M" />
+    </cluster-controllers>
+    <slobroks>
+      <slobrok hostalias="node0" />
+      <slobrok hostalias="node1" />
+      <slobrok hostalias="node2" />
+    </slobroks>
+    <adminserver hostalias="node3" />
+  </admin>
+  <content deploy:instance="prod" id="content-doc1" version="1.0">
+    <redundancy>1</redundancy>
+    <documents>
+      <document type="doc1" mode="index"/>
+    </documents>
+    <nodes>
+<!--      Flat distribution -->
+      <node hostalias="node6" distribution-key="0" />
+      <node hostalias="node7" distribution-key="1" />
+    </nodes>
+  </content>
+  <content deploy:instance="prod" id="content-doc2" version="1.0">
+    <redundancy>2</redundancy>
+    <documents>
+      <document type="doc2" mode="index"/>
+    </documents>
+    <preprocess:include file="content-doc2.xml" />
   </content>
 </services>

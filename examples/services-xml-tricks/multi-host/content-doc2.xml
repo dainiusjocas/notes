@@ -1,0 +1,9 @@
+<group>
+  <distribution partitions="1|*" />
+  <group name="group0" distribution-key="0">
+    <node hostalias="node8" distribution-key="0"/>
+  </group>
+  <group name="group1" distribution-key="1">
+    <node hostalias="node9" distribution-key="1"/>
+  </group>
+</group>
