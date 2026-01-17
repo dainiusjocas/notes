@@ -85,6 +85,16 @@ curl --header "Content-Type: application/zip" \
 zip -r ../application.zip . 
 
 curl -X POST \
+       --header "Content-Type:application/zip" \
+       --data-binary @../application.zip \
+       "http://localhost:19071/application/v2/tenant/default/prepareandactivate?applicationName=default&instance=demo"
+# https://docs.vespa.ai/en/reference/api/deploy-v2.html#prepareandactivate
+# parameters are the same as https://docs.vespa.ai/en/reference/api/deploy-v2.html#prepare-session
+
+
+
+
+curl -X POST \
      --header "Content-Type:application/zip" \
      --data-binary @../application.zip \
      "http://localhost:19071/application/v2/tenant/default/session"
