@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<services version="1.0" xmlns:deploy="vespa" xmlns:preprocess="?">
+<!--  Verbatim admin part under an instance to be ready for PROD settings-->
+  <admin deploy:instance="dev" version="2.0">
+    <adminserver hostalias="local0" />
+  </admin>
+  <container id="container" version="1.0">
+    <document-processing/>
+    <document-api/>
+    <search/>
+<!--    <nodes>-->
+<!--      <jvm options="-Xms32M -Xmx128M"/> &lt;!&ndash; Added only to shrink memory for testing - remove before real use &ndash;&gt;-->
+<!--      <node hostalias="local0" />-->
+<!--    </nodes>-->
+  </container>
+  <content deploy:instance="dev" id="content" version="1.0">
+    <redundancy>1</redundancy>
+    <documents>
+      <document type="doc1" mode="index"/>
+      <document type="doc2" mode="index"/>
+    </documents>
+<!--    <nodes>-->
+<!--      <node hostalias="local0" distribution-key="0" />-->
+<!--    </nodes>-->
+  </content>
+</services>
