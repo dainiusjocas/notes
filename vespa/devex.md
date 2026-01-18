@@ -2,42 +2,44 @@
 
 ## TL;DR
 
-Leveraging Vespa `services.xml` variants with the `instance` is a neat way to improve DevEx.
+Leveraging Vespa `services.xml` [variants](https://docs.vespa.ai/en/operations/deployment-variants.html#services.xml-variants) with the `[instance](https://docs.vespa.ai/en/learn/glossary.html#instance)` is a neat way to improve DevEx.
 
 ## Just show me the code
 
 E.g. we want to have `doc1` schema deployed in `prod` and `dev` instances, but `doc2` schema deployed only to `dev`.
 Then `services.xml` variants can be:
-```shell
+```xml
 <content id="content" version="1.0">
-<redundancy>1</redundancy>
-<documents deploy:instance="prod">
-  <document type="doc1" mode="index"/>
-</documents>
-<documents deploy:instance="dev">
-  <document type="doc1" mode="index"/>
-  <document type="doc2" mode="index"/>
-</documents>
+  <redundancy>1</redundancy>
+  <documents deploy:instance="prod">
+    <document type="doc1" mode="index"/>
+  </documents>
+  <documents deploy:instance="dev">
+    <document type="doc1" mode="index"/>
+    <document type="doc2" mode="index"/>
+  </documents>
 </content>
 ```
 
-This command deploys `prod` instance:
+This command deploys the `prod` instance:
 ```shell
-curl -X POST \
-        --header "Content-Type:application/zip" \
-                 --data-binary @application.zip \
+curl -X POST -s \
+    --header "Content-Type:application/zip" \
+    --data-binary @application.zip \
     "http://localhost:19071/application/v2/tenant/default/prepareandactivate?instance=prod"
 ```
-Properly creates a Vespa application as if only the `deploy:instance="prod"` variant was specified.
+It creates a Vespa application as if only the `deploy:instance="prod"` variant was specified in `services.xml`.
 
-And when deployed to the multi-node self-hosted Vespa with
+And when deployed to the `dev` self-hosted Vespa instance with:
 ```shell
-curl -X POST \
-        --header "Content-Type:application/zip" \
-                 --data-binary @application.zip \
-    "http://localhost:19071/application/v2/tenant/default/prepareandactivate?instance=dev"
+curl -X POST -s \
+  --header "Content-Type:application/zip" \
+  --data-binary @application.zip \
+  "http://localhost:19071/application/v2/tenant/default/prepareandactivate?instance=dev"
 ```
 deploys the application as if only the `deploy:insatnce=prod` variant was specified.
+
+For the full example see [here](https://github.com/dainiusjocas/notes/tree/main/examples/services-xml-tricks/single-node/).
 
 ## Abstract
 
@@ -164,6 +166,12 @@ TODO: examples.
 If you have custom Vespa components, then there is really no reason not to use `@SystemTest` in your CI/CD.
 Unless, of course, you can't stand any language that is hosted on JVM, e.g. Java, Kotlin, Clojure, maybe even GraalVM could be leveraged to write such tests in Python or JavaScript. 
 
+## Gotchas
+
+When you have a running Vespa with a running instance `A`, and you deploy an instance `B`, then Vespa refuses it with an error:
+```shell
+{"error-code":"INVALID_APPLICATION_PACKAGE","message":"Invalid application: 'default.default.B' tried to allocate 'localhost', but the host is already allocated to another application"}
+```
 
 ## Yes, but how
 
