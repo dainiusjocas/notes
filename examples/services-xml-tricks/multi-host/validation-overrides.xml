@@ -1,0 +1,23 @@
+<validation-overrides>
+  <allow until='2026-01-17'>access-control</allow>
+  <allow until='2026-01-17'>certificate-removal</allow>
+  <allow until='2026-01-17'>cluster-size-reduction</allow>
+  <allow until='2026-01-17'>config-model-version-mismatch</allow>
+  <allow until='2026-01-17'>content-cluster-removal</allow>
+  <allow until='2026-01-17'>schema-removal</allow>
+  <allow until='2026-01-17'>data-plane-token-removal</allow>
+  <allow until='2026-01-17'>deployment-removal</allow>
+  <allow until='2026-01-17'>field-type-change</allow>
+  <allow until='2026-01-17'>global-document-change</allow>
+  <allow until='2026-01-17'>global-endpoint-change</allow>
+  <allow until='2026-01-17'>hnsw-settings-change</allow>
+  <allow until='2026-01-17'>indexing-change</allow>
+  <allow until='2026-01-17'>indexing-mode-change</allow>
+  <allow until='2026-01-17'>paged-setting-removal</allow>
+  <allow until='2026-01-17'>redundancy-increase</allow>
+  <allow until='2026-01-17'>redundancy-one</allow>
+  <allow until='2026-01-17'>resources-reduction</allow>
+  <allow until='2026-01-17'>skip-old-config-models</allow>
+  <allow until='2026-01-17'>tensor-type-change</allow>
+  <allow until='2026-01-17'>zone-endpoint-change</allow>
+</validation-overrides>
