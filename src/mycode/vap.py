@@ -9,7 +9,7 @@ from pathlib import Path
 
 from vespa.application import Vespa
 from vespa.deployment import VespaDocker
-from vespa.package import ApplicationPackage
+from vespa.package import ApplicationPackage, Schema, Document, Field, RankProfile, Function
 from vespa.io import VespaResponse
 
 
@@ -70,3 +70,61 @@ def add_bundles(application_root: Path | str, bundles: list[str]):
         file_name = src.split('/')[-1]
         dst = f'{application_root}/components/{file_name}'
         copyfile(src, dst)
+
+
+def demo_application_package():
+    doc_schema = Schema(
+        name="doc",
+        document=Document(
+            fields=[
+                Field(
+                    name="id",
+                    type="int",
+                    indexing=["attribute"],
+                    attribute=["fast-search"],
+                ),
+            ]
+        ),
+        rank_profiles=[
+            RankProfile(
+                name='fields',
+                inherits='unranked',
+                first_phase="0",
+                functions=[
+                    Function(
+                        name='id',
+                        expression='attribute(id)'
+                    )
+                ],
+                match_features=[
+                    'id'
+                ],
+                summary_features=[
+                    'id'
+                ]
+            )
+        ]
+    )
+    return ApplicationPackage(
+        name="test",
+        schema=[doc_schema],
+    )
+
+
+def feed(client: Vespa, docs: list[dict]=None, schema='doc', namespace='doc'):
+    """
+    Convenience method to feed some docs into Vespa by specifying only the actual fields.
+    :param client:
+    :param docs:  are expected in this shape: `[{'a': 1}, {'a': 2}]`
+    :param schema:
+    :param namespace:
+    :return:
+    """
+    if docs is None:
+        docs = []
+    client.feed_iterable(
+        map(lambda doc: {'id': doc[0], 'fields': doc[1]}, enumerate(docs)),
+        schema=schema,
+        namespace=namespace,
+        callback=feed_callback,
+    )

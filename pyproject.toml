@@ -5,10 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "pyvespa==0.62",
+    "pyvespa==1.0.2",
     "ipykernel>=6.30.1",
-    "jupyter-book==2.1.0",
+    "jupyter-book==2.1.2",
     "jupyter-server>=2.17.0",
     "jupyterlab>=4.4.7",
-    "mystmd==1.6.4",
+    "mystmd==1.8.0",
 ]
