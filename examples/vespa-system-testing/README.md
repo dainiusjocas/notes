@@ -58,5 +58,17 @@ for an overview of production deployments.
 ## Running system tests locally
 
 ```shell
+docker run \
+  --detach \
+  --rm \
+  --name vespa-test \
+  --publish 0.0.0.0:8080:8080 \
+  --publish 0.0.0.0:19050:19050 \
+  --publish 0.0.0.0:19071:19071 \
+  --publish 0.0.0.0:19092:19092 \
+  vespaengine/vespa:8.638.30
+```
 
+```shell
+mvn package && vespa deploy -t local
 ```
