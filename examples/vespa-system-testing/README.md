@@ -72,3 +72,7 @@ docker run \
 ```shell
 mvn package && vespa deploy -t local
 ```
+
+```shell
+mvn test -D test.categories=system -D vespa.test.config=ext/test-config-local.json
+```
