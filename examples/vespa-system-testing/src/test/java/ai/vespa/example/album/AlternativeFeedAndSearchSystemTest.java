@@ -29,8 +29,9 @@ public class AlternativeFeedAndSearchSystemTest extends BaseSystemTest {
                 .status(200)
                 .and()
                 .search("yql", yql, "timeout", "10s");
-        then("1 document is found")
-                .body("/root/fields/totalCount", equalTo(1L));
+        then("1 document is found and the artist is Coldplay")
+                .body("/root/fields/totalCount", equalTo(1L),
+                        "/root/children/0/fields/artist", containsString("Coldplay"));
     }
 
     @Override
