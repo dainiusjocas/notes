@@ -2,15 +2,8 @@ package ai.vespa.example.album;
 
 import ai.vespa.example.album.systemtests.BaseSystemTest;
 import ai.vespa.hosted.cd.SystemTest;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import net.thisptr.jackson.jq.JsonQuery;
-import net.thisptr.jackson.jq.Scope;
-import net.thisptr.jackson.jq.Version;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
