@@ -28,7 +28,6 @@ public class VespaTester {
     private static final String NAMESPACE = "namespace";
 
     private static final Endpoint endpoint;
-    private static final ApplicationId appId;
     private static final ObjectMapper mapper;
     private static final DefaultPrettyPrinter printer;
     private static final Scope rootScope = Scope.newEmptyScope();
@@ -36,7 +35,6 @@ public class VespaTester {
     static {
         TestRuntime testRuntime = TestRuntime.get();
         endpoint = testRuntime.deploymentToTest().endpoint("default");
-        appId = testRuntime.application();
         mapper = new ObjectMapper();
         printer = new DefaultPrettyPrinter();
         var indenter = new DefaultIndenter("  ", DefaultIndenter.SYS_LF);
@@ -66,10 +64,14 @@ public class VespaTester {
         overridesForNextRequest.putAll(Utils.toMap(overrides));
         return this;
     }
-
-    public boolean appNameMatches(String... names) {
-        var nameSet = new HashSet<>(Arrays.asList(names));
-        return nameSet.contains(appId.application());
+    public VespaTester with(String jsonString) {
+        var vals = JSON.toObject(JSON.parse(jsonString), Map.class);
+        if (vals instanceof Map<?, ?> map) {
+            overridesForNextRequest.putAll(map);
+        } else {
+            throw new IllegalArgumentException("Invalid JSON string: must be a map");
+        }
+        return this;
     }
 
     public VespaTester deleteAll(String... schemas) {
@@ -169,11 +171,11 @@ public class VespaTester {
         return body(jq1, not(equalTo(JSON.toObject(JSON.at(session.lastResponseBody(), jq2)))));
     }
 
-    public VespaTester body(String jq, Matcher matcher, Object... pointerMatcherPairs) {
+    public VespaTester body(String jq, Matcher matcher) {
         if (session.isEmpty()) {
             throw new IllegalStateException("No request was made yet");
         }
-        Map<String, Matcher<?>> matcherMap = Utils.extractPointerMatcherPairs(pointerMatcherPairs);
+        Map<String, Matcher<?>> matcherMap = new HashMap<>(); //Utils.extractPointerMatcherPairs(Arrays.asList());
         matcherMap.put(jq, matcher);
         var lastBody = session.lastResponseBody();
         for (Map.Entry<String, Matcher<?>> entry : matcherMap.entrySet()) {
@@ -181,6 +183,13 @@ public class VespaTester {
             var value = JSON.toObject(jsonNode);
             Utils.verify(value, (Matcher<Object>) entry.getValue(), jq);
         }
+        return this;
+    }
+
+    public VespaTester body(String jq, Object expected) {
+        var jsonNode = JSON.at(session.lastResponseBody(), jq);
+        var actual = JSON.toObject(jsonNode, expected.getClass());
+        Utils.verify(actual, equalTo(expected), jq);
         return this;
     }
 
@@ -212,7 +221,7 @@ public class VespaTester {
     }
 
     public VespaTester printResponse() {
-        return printResponse("");
+        return printResponse(".");
     }
 
     public VespaTester printHeader() {
@@ -320,6 +329,13 @@ public class VespaTester {
                 throw new RuntimeException(e);
             }
         }
+        static Object toObject(JsonNode jsonNode, Class<?> klass) {
+            try {
+                return mapper.treeToValue(jsonNode, klass);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         static JsonNode parse(String json) {
             try {
@@ -357,7 +373,7 @@ public class VespaTester {
         }
 
         static String pp(String json) {
-            return pp(json, "");
+            return pp(json, ".");
         }
 
         public static Object take(Map<String, JsonNode> captures, String id, String jq) {
