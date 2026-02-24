@@ -153,13 +153,13 @@ public class VespaTester {
         return body("/root/fields/totalCount", matcher);
     }
 
-    public VespaTester expectKeys(String jsonPointer, List<String> expectedKeys) {
+    public VespaTester expectKeys(String jq, List<String> expectedKeys) {
         Iterable keyMatchers = expectedKeys.stream().map(Matchers::hasKey).toList();
-        return body(jsonPointer, allOf(keyMatchers));
+        return body(jq, allOf(keyMatchers));
     }
 
-    public VespaTester expectSome(String jsonPointer) {
-        body(jsonPointer, notNullValue());
+    public VespaTester expectSome(String jq) {
+        body(jq, notNullValue());
         return this;
     }
 
@@ -172,17 +172,9 @@ public class VespaTester {
     }
 
     public VespaTester body(String jq, Matcher matcher) {
-        if (session.isEmpty()) {
-            throw new IllegalStateException("No request was made yet");
-        }
-        Map<String, Matcher<?>> matcherMap = new HashMap<>(); //Utils.extractPointerMatcherPairs(Arrays.asList());
-        matcherMap.put(jq, matcher);
-        var lastBody = session.lastResponseBody();
-        for (Map.Entry<String, Matcher<?>> entry : matcherMap.entrySet()) {
-            var jsonNode = JSON.at(lastBody, entry.getKey());
-            var value = JSON.toObject(jsonNode);
-            Utils.verify(value, (Matcher<Object>) entry.getValue(), jq);
-        }
+        var jsonNode = JSON.at(session.lastResponseBody(), jq);
+        var value = JSON.toObject(jsonNode);
+        Utils.verify(value, matcher, jq);
         return this;
     }
 
@@ -385,23 +377,6 @@ public class VespaTester {
         static <T> void verify(T value, Matcher<? super T> matcher, String... messages) {
             var reason = String.join("\n---------------\n", messages);
             assertThat(reason, value, matcher);
-        }
-
-        static Map<String, Matcher<?>> extractPointerMatcherPairs(Object... pointerMatcherPairs) {
-            if (pointerMatcherPairs.length % 2 != 0) {
-                throw new IllegalArgumentException("Invalid entries: must be an even number of arguments (key-value pairs)");
-            }
-            Map<String, Matcher<?>> fields = new HashMap<>();
-            for (int i = 0; i < pointerMatcherPairs.length; i += 2) {
-                Object key = pointerMatcherPairs[i];
-                Object value = pointerMatcherPairs[i + 1];
-                if (key instanceof String keyString && value instanceof Matcher<?> matcher) {
-                    fields.put(keyString, matcher);
-                } else {
-                    throw new IllegalArgumentException("Invalid entries: matcher pairs must be String and Matcher type");
-                }
-            }
-            return fields;
         }
 
         static Map<Object, Object> toMap(Object[] keyVals) {
