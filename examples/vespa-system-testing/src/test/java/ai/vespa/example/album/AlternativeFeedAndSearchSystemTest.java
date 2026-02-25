@@ -5,10 +5,8 @@ import ai.vespa.hosted.cd.SystemTest;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
 
 @SystemTest
 public class AlternativeFeedAndSearchSystemTest extends BaseSystemTest {
