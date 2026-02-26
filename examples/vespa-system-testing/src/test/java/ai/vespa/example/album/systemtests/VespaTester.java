@@ -8,9 +8,14 @@ import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.thisptr.jackson.jq.BuiltinFunctionLoader;
+import net.thisptr.jackson.jq.JsonQuery;
+import net.thisptr.jackson.jq.Scope;
+import net.thisptr.jackson.jq.Version;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 
+import java.io.IOException;
 import java.net.http.HttpResponse;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,19 +28,19 @@ public class VespaTester {
     private static final String NAMESPACE = "namespace";
 
     private static final Endpoint endpoint;
-    private static final ApplicationId appId;
     private static final ObjectMapper mapper;
     private static final DefaultPrettyPrinter printer;
+    private static final Scope rootScope = Scope.newEmptyScope();
 
     static {
         TestRuntime testRuntime = TestRuntime.get();
         endpoint = testRuntime.deploymentToTest().endpoint("default");
-        appId = testRuntime.application();
         mapper = new ObjectMapper();
         printer = new DefaultPrettyPrinter();
         var indenter = new DefaultIndenter("  ", DefaultIndenter.SYS_LF);
         printer.indentObjectsWith(indenter);
         printer.indentArraysWith(indenter);
+        BuiltinFunctionLoader.getInstance().loadFunctions(Version.LATEST, rootScope);
     }
 
     private final Map<String, JsonNode> captures;
@@ -59,10 +64,14 @@ public class VespaTester {
         overridesForNextRequest.putAll(Utils.toMap(overrides));
         return this;
     }
-
-    public boolean appNameMatches(String... names) {
-        var nameSet = new HashSet<>(Arrays.asList(names));
-        return nameSet.contains(appId.application());
+    public VespaTester with(String jsonString) {
+        var vals = JSON.toObject(JSON.parse(jsonString), Map.class);
+        if (vals instanceof Map<?, ?> map) {
+            overridesForNextRequest.putAll(map);
+        } else {
+            throw new IllegalArgumentException("Invalid JSON string: must be a map");
+        }
+        return this;
     }
 
     public VespaTester deleteAll(String... schemas) {
@@ -144,54 +153,44 @@ public class VespaTester {
         return body("/root/fields/totalCount", matcher);
     }
 
-    public VespaTester expectKeys(String jsonPointer, List<String> expectedKeys) {
+    public VespaTester expectKeys(String jq, List<String> expectedKeys) {
         Iterable keyMatchers = expectedKeys.stream().map(Matchers::hasKey).toList();
-        return body(jsonPointer, allOf(keyMatchers));
+        return body(jq, allOf(keyMatchers));
     }
 
-    public VespaTester expectSome(String jsonPointer) {
-        body(jsonPointer, notNullValue());
+    public VespaTester expectSome(String jq) {
+        body(jq, notNullValue());
         return this;
     }
 
-    public VespaTester expectEquals(String jsonPointer1, String jsonPointer2) {
-        return body(jsonPointer1, equalTo(JSON.toObject(session.lastResponseBody().at(jsonPointer2))));
+    public VespaTester expectEquals(String jq1, String jq2) {
+        return body(jq1, equalTo(JSON.toObject(JSON.at(session.lastResponseBody(), jq2))));
     }
 
-    public VespaTester expectNotEquals(String jsonPointer1, String jsonPointer2) {
-        return body(jsonPointer1, not(equalTo(JSON.toObject(session.lastResponseBody().at(jsonPointer2)))));
+    public VespaTester expectNotEquals(String jq1, String jq2) {
+        return body(jq1, not(equalTo(JSON.toObject(JSON.at(session.lastResponseBody(), jq2)))));
     }
 
-    /**
-     * Generic matcher, that taken in a org.hamcrest.Matcher.
-     * After locating JsonNode, it is best-effort converted to Java Object for assertions.
-     *
-     * @param jsonPointer
-     * @param matcher
-     * @return
-     */
-    @SuppressWarnings("rawtypes")
-    public VespaTester body(String jsonPointer, Matcher matcher, Object... pointerMatcherPairs) {
-        if (session.isEmpty()) {
-            throw new IllegalStateException("No request was made yet");
-        }
-        Map<String, Matcher<?>> matcherMap = Utils.extractPointerMatcherPairs(pointerMatcherPairs);
-        matcherMap.put(jsonPointer, matcher);
-        var lastBody = session.lastResponseBody();
-        for (Map.Entry<String, Matcher<?>> entry : matcherMap.entrySet()) {
-            var jsonNode = lastBody.at(entry.getKey());
-            var value = JSON.toObject(jsonNode);
-            Utils.verify(value, (Matcher<Object>) entry.getValue(), jsonPointer);
-        }
+    public VespaTester body(String jq, Matcher matcher) {
+        var jsonNode = JSON.at(session.lastResponseBody(), jq);
+        var value = JSON.toObject(jsonNode);
+        Utils.verify(value, matcher, jq);
+        return this;
+    }
+
+    public VespaTester body(String jq, Object expected) {
+        var jsonNode = JSON.at(session.lastResponseBody(), jq);
+        var actual = JSON.toObject(jsonNode, expected.getClass());
+        Utils.verify(actual, equalTo(expected), jq);
         return this;
     }
 
     public VespaTester capture(String id) {
-        return capture(id, "");
+        return capture(id, ".");
     }
 
-    public VespaTester capture(String id, String jsonPointer) {
-        captures.put(id, JSON.parse(session.lastRequestResponse().response().body()).at(jsonPointer));
+    public VespaTester capture(String id, String jq) {
+        captures.put(id, JSON.at(JSON.parse(session.lastRequestResponse().response().body()), jq));
         return this;
     }
 
@@ -199,22 +198,22 @@ public class VespaTester {
         return this;
     }
 
-    public JsonNode body(String jsonPointer) {
-        return session.lastResponseBody().at(jsonPointer);
+    public JsonNode body(String jq) {
+        return JSON.at(session.lastResponseBody(), jq);
     }
 
     public JsonNode body() {
-        return body("");
+        return body(".");
     }
 
     // Pretty prints response JSON. Useful for debugging, add it into the chain.
-    public VespaTester printResponse(String jsonPointer) {
-        Printer.print(JSON.pp(session.lastRequestResponse().response.body(), jsonPointer));
+    public VespaTester printResponse(String jq) {
+        Printer.print(JSON.pp(session.lastRequestResponse().response.body(), jq));
         return this;
     }
 
     public VespaTester printResponse() {
-        return printResponse("");
+        return printResponse(".");
     }
 
     public VespaTester printHeader() {
@@ -322,6 +321,13 @@ public class VespaTester {
                 throw new RuntimeException(e);
             }
         }
+        static Object toObject(JsonNode jsonNode, Class<?> klass) {
+            try {
+                return mapper.treeToValue(jsonNode, klass);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         static JsonNode parse(String json) {
             try {
@@ -339,16 +345,31 @@ public class VespaTester {
             }
         }
 
-        static String pp(String json, String jsonPointer) {
-            return pp(JSON.parse(json).at(jsonPointer));
+        static JsonNode at(JsonNode jsonNode, String jq) {
+            return executeJq(jq, jsonNode);
+        }
+
+        private static JsonNode executeJq(String jqQuery, JsonNode input) {
+            try {
+                JsonQuery query = JsonQuery.compile(jqQuery, Version.LATEST);
+                final List<JsonNode> out = new ArrayList<>();
+                query.apply(Scope.newChildScope(rootScope), input, out::add);
+                return out.isEmpty() ? null : out.get(0);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        static String pp(String json, String jq) {
+            return pp(JSON.at(JSON.parse(json), jq));
         }
 
         static String pp(String json) {
-            return pp(json, "");
+            return pp(json, ".");
         }
 
-        public static Object take(Map<String, JsonNode> captures, String id, String jsonPointer) {
-            return toObject(captures.get(id).at(jsonPointer));
+        public static Object take(Map<String, JsonNode> captures, String id, String jq) {
+            return toObject(JSON.at(captures.get(id), jq));
         }
     }
 
@@ -356,23 +377,6 @@ public class VespaTester {
         static <T> void verify(T value, Matcher<? super T> matcher, String... messages) {
             var reason = String.join("\n---------------\n", messages);
             assertThat(reason, value, matcher);
-        }
-
-        static Map<String, Matcher<?>> extractPointerMatcherPairs(Object... pointerMatcherPairs) {
-            if (pointerMatcherPairs.length % 2 != 0) {
-                throw new IllegalArgumentException("Invalid entries: must be an even number of arguments (key-value pairs)");
-            }
-            Map<String, Matcher<?>> fields = new HashMap<>();
-            for (int i = 0; i < pointerMatcherPairs.length; i += 2) {
-                Object key = pointerMatcherPairs[i];
-                Object value = pointerMatcherPairs[i + 1];
-                if (key instanceof String keyString && value instanceof Matcher<?> matcher) {
-                    fields.put(keyString, matcher);
-                } else {
-                    throw new IllegalArgumentException("Invalid entries: matcher pairs must be String and Matcher type");
-                }
-            }
-            return fields;
         }
 
         static Map<Object, Object> toMap(Object[] keyVals) {
