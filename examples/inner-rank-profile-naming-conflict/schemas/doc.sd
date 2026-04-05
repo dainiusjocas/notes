@@ -1,0 +1,5 @@
+schema doc {
+    document doc {
+        field id type int {}
+    }
+}
