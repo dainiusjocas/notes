@@ -1,7 +1,33 @@
 # Inner Rank Profile Naming Conflict
 
 When two separate rank profiles have inner rank-profiles that have the same name, the application fails to deploy.
-Given that inner rank profiles have full name `containing-profile-name.inner-profile-name`, such a naming conflict seems redundant.
+
+Schema e.g.
+```plaintext
+schema doc {
+    document doc {
+        field id type int {}
+    }
+    rank-profile ranking_a {
+        function constant_value_a() { expression: 0 }
+        first-phase { expression: constant_value_a }
+
+        rank-profile debug inherits ranking_a {
+            match-features { constant_value_a }
+        }
+    }
+    rank-profile ranking_b {
+        function constant_value_b() { expression: 1 }
+        first-phase { expression: constant_value_b }
+
+        rank-profile debug inherits ranking_b {
+            match-features { constant_value_b }
+        }
+    }
+}
+```
+
+Given that inner rank profiles have a full name `containing-profile-name.inner-profile-name`, such a naming conflict seems redundant.
 
 Why such a behavior is not a bug? Docs say:
 ```text
@@ -15,7 +41,7 @@ The `behaves just like a top level rank profile` part says that name must be uni
 However, one can argue that the top level rank profile already ensures the uniqueness of the name.
 
 Letting inner rank profiles to have the same name would allow for some naming conventions, e.g. `debug` or `test`. 
-Such profiles could expose detailed ranking features via match-features or text tokens.
+Such profiles could expose detailed ranking features via `match-features` or text tokens.
 Such information could be used in system tests or debugging problems in running systems.
 
 ## Reproduction
