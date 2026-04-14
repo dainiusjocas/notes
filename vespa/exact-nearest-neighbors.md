@@ -26,6 +26,8 @@ The ENN is the most expensive filter to execute, so it is evaluated last.
 Which means, that the amount of docs that the ENN sees is equal to the filter selectivity.
 This gives the estimate `docsRanked = targetHits(1 + ln(totalDocCount * filterSelectivity /targetHits))`.
 
+TODO: a note on the 'unranked' rank profile, and why it makes the number of `totalHits` equal to the docs in the index.
+
 ## Performance
 
 Maintaining a large priority queue is expensive.
