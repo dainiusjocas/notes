@@ -25,3 +25,22 @@ What happens with filters and ENN?
 The ENN is the most expensive filter to execute, so it is evaluated last.
 Which means, that the amount of docs that the ENN sees is equal to the filter selectivity.
 This gives the estimate `docsRanked = targetHits(1 + ln(totalDocCount * filterSelectivity /targetHits))`.
+
+## Performance
+
+Maintaining a large priority queue is expensive.
+So, keep your target hits as low as possible per content node.
+
+TODO: maybe limit the number of top hits maintained per content node after the first phase?
+
+## Multi-threading
+
+The mental model is this: when more than one thread is used, then documents are divided into equal parts and each thread gets a part of the documents.
+And when docs are matched and ranked, the results are merged back.
+Implementation detail is that the number of expected hits is not divided equally.
+So, the each thread does a more work that what statistically would be needed.
+
+E.g. ENN with targetHits=1000 and 10 threads will have 1000*10=10000 matches.
+Which means that for a Million document dataset, ENN will expose approximately
+`docsRanked = 10 * 1000(1 + ln((1M / 10)/1000)) = 56052` which is way more that 1 thread would expose
+`docsRanked = 1000(1 + ln(1 *10^6/1000)) = 7908`, 56052/7908 = 7x!
