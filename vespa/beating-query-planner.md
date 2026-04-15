@@ -26,12 +26,12 @@ Schema:
 :remove-input: true
 :::
 
-It has 3 fields:
+It has three fields:
 - `id` for filtering on int values
 - `embedding` for nearest neighbor search
 - `lexical` for weakAnd queries.
 
-We've indexed 100000 documents with some random data.
+We've indexed 100,000 documents with some random data.
 
 For full details check the [notebook](../notebooks/beating-query-planner.ipynb).
 
