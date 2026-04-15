@@ -78,6 +78,37 @@ Even if the field has an HNSW index, when filters are very restrictive, Vespa ex
 The yql is more complicated for seemingly no good reason.
 The filters are executed twice.
 
-# Conclusion
+## Conclusion
 
 If you happen to work with hybrid search, feel free to try this optimization.
+
+## P.S.: where are those nice tables coming from?
+
+Vespa CLI has a `vespa inspect profile` that given a Vespa response with the trace data prints those nice tables.
+
+My script that combines querying and visualizing in one command is [here](https://gist.github.com/dainiusjocas/8b2e7eebfe80f0d710d819632fb46b95):
+```shell
+
+#!/bin/bash
+
+# Wrap querying and trace visualizations
+# Accepts all params that `vespa query` accepts.
+# Virtual pipes are needed because `vespa inspect profile` doesn't support reading from stdin.
+
+# Usage:
+# ./vespa-query-inspect --file=query.json -t 'http://localhost:8080'
+
+# 1. Create a virtual pipe file in your current directory
+mkfifo v_profile
+
+# 2. Start the query in the background with all the params from invoking this script
+# It will "hang" there until something reads from the other side.
+vespa query --profile "$@" \
+  --profile-file=v_profile 2> /dev/null > /dev/null &
+
+# 3. Tell the inspector to read from that virtual file
+vespa inspect profile -f v_profile
+
+# 4. Clean up the pipe when done
+rm v_profile
+```
