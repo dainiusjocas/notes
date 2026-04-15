@@ -1,92 +1,148 @@
-# Helping Vespa query planner to do hybrid search
+# Strategic Query Shaping for Vespa Hybrid Search
 
-TL;DR: in Vespa when the exact nearest neighbor search is combined with weakAnd
-it is better to construct query like `(filters AND nearestNeighbors) OR (filters AND weakAnd)` instead of `(filters AND (nearestNeighbor OR weakAnd))`.
+2026-04-15
+
+**TL;DR:** In [Vespa](https://vespa.ai/), when combining **exact nearest neighbor** search with **weakAnd**, it is often more efficient to distribute your filters: `(filters AND ENN) OR (filters AND weakAnd)`. This performs better than the nested approach: `åfilters AND (ENN OR weakAnd)`.
 
 ## Context 
 
-Hybrid search typically means combining vector with lexical retrievers.
+[Hybrid search](https://docs.vespa.ai/en/learn/tutorials/hybrid-search) typically means combining vector and lexical retrievers.
 Also, a fact of life is that anything useful typically also requires good ol' filtering.
-So, it is natural to write queries like:
+Therefore, it is natural to write queries like:
 
 ```sql
-select * 
-from sources *
-where filters AND (nearestNeighbor OR weakAnd)
+SELECT * 
+FROM docs
+WHERE filters AND (nearestNeighbor OR weakAnd)
 ```
 
-However, when `nearestNeighbor` is doing exact nearest neighbors (ENN) search then, you might experience elevated latencies, maybe even timeouts.
+## The issue
+
+When [`nearestNeighbor`](https://docs.vespa.ai/en/querying/nearest-neighbor-search-guide) means [executing exact nearest neighbors (ENN) search](https://docs.vespa.ai/en/querying/nearest-neighbor-search-guide#exact-nearest-neighbor-search), and it is combined through `OR` with [`weakAnd`](https://docs.vespa.ai/en/ranking/wand.html#weakand), then you might experience elevated latencies, maybe even timeouts, for seemingly no good reason.
+
+Let's demonstrate the issue with a small example application.
 
 ## Experimental setup
 
-Schema:
+The setup runs on [8.673.18](https://hub.docker.com/layers/vespaengine/vespa/8.673.18/images/sha256-81251d6b162725fc7f7703d94482409c9b2d60a38b7feebbbf16932936f6556a) Vespa version.
+
+For full details check the [notebook](../notebooks/beating-query-planner.ipynb).
+
+Schema has three fields:
+- `id`: an attribute with `fast-search` for filtering on `int` values;
+- `embedding`: a [tensor](https://docs.vespa.ai/en/learn/glossary.html#tensor) with one indexed float dimension for the nearest neighbor search;
+- `lexical`: string field with an index for `weakAnd` queries.
 
 :::{embed}../notebooks/beating-query-planner.ipynb#schema
 :remove-output: false
 :remove-input: true
 :::
 
-It has three fields:
-- `id` for filtering on int values
-- `embedding` for nearest neighbor search
-- `lexical` for weakAnd queries.
+Let's index 100,000 documents with some random data.
 
-We've indexed 100,000 documents with some random data.
+### Queries
 
-For full details check the [notebook](../notebooks/beating-query-planner.ipynb).
-
-## Query execution
+The **baseline** YQL:
 
 :::{embed}../notebooks/beating-query-planner.ipynb#yql_base
-:remove-output: true
+:remove-output: false
+:remove-input: true
 :::
-when this query is executed, the matching phase has a problem: weakAnd can't prune any documents because it is in `OR` with exact nearest neighbor search which matches all documents (yes, `distanceThreshold` doesn't help).
 
-See the summary of matching traces:
+The **alternative** YQL:
+
+:::{embed}../notebooks/beating-query-planner.ipynb#yql_alt
+:remove-output: false
+:remove-input: true
+:::
+
+This clearly preserves the matching logic, it just duplicates the filter `id>1` to both branches.
+However, the execution of the queries is very different!
+
+[`targetHits`](https://docs.vespa.ai/en/reference/querying/yql.html#totaltargethits) is set to relatively high 1000 to make the query to do a bit more work to emphasize the difference.
+
+### Execution
+
+The **baseline** query without tracing takes consistently about **12 ms**. 
+While the altarnative query takes about **7 ms**.
+That is about 56% faster in an index of just 100k docs for the same logic: both queries have provided **5692** docs for the first phase ranking.
+Why then the difference in latency?
+
+### Traces
+
+Given that ranking profile is the same and it gets the same number of hits, let's focus on the matching phase.
+
+**Baseline** matching phase summary:
 
 :::{embed}../notebooks/beating-query-planner.ipynb#base_matching_summary
 :remove-output: false
 :remove-input: true
 :::
 
-However, if we rewrite the query like this:
-:::{embed}../notebooks/beating-query-planner.ipynb#yql_alt
-:remove-output: true
-:::
-This clearly preserves the matching logic, it just duplicates the filter `id>1` to both branches.
-However, the execution is vastly different!
-
+**Alternative** matching phase summary:
 
 :::{embed}../notebooks/beating-query-planner.ipynb#alt_matching_summary
 :remove-output: false
 :remove-input: true
 :::
 
-The matching latency went from 91.847 ms to 21.827 ms.
+Matching latency dropped by 76% (comparable to what we've seen without the tracing overhead), from **91.8 ms down to 21.8 ms**.
 
-The main difference is in the number of items evaluated by the weakAnd: down from 99998 to 213 documents!
+When looking closer, the biggest difference is in the **weakAnd** seeks: **baseline** evaluated 99,998 docs, while the **alternative** evaluated only 213 docs.
+The **NearestNeighbor** seeked about the same number of documents: 100198 vs. 99998.
 
-Now imagine, if you have millions of documents per content node, and you now have timeouts for matching phase.
-Restrictive filters help, but only to some extent.
+It looks like when the **baseline** query was executed, **weakAnd** couldn't prune any documents.
+Probably because **weakAnd** is combined with **NearestNeighbor** through the `OR` operator, and given that all docs match ENN, **weakAnd** is forced to evaluate `OR` on all query terms for each document which is a lot of work!
+In case you wonder, `distanceThreshold` doesn't help.
 
-## HNSW index
+Now imagine, if you have millions of documents per content node, then depending on the query terms and filtering ratio you now have timeouts due to unnecessary work in the matching phase.
 
-Even if the field has an HNSW index, when filters are very restrictive, Vespa executes ENN, which might have exactly this problem.
+## Discussion
+### HNSW index
 
-## Downsides
+Even if the tensor field has an [HNSW](https://docs.vespa.ai/en/reference/schemas/schemas.html#index-hnsw) index, when filters are very restrictive, [Vespa executes ENN](https://blog.vespa.ai/tweaking-ann-parameters/).
+And if your query has the same shape, you might experience high latencies.
 
-The yql is more complicated for seemingly no good reason.
-The filters are executed twice.
+When the **approximate nearest neighbor** (ANN) search is executed, then there is no such problem.
+Primarily because the actual ANN hits are found during the [blueprint phase](https://github.com/vespa-engine/vespa/blob/34c0bec6ecb6d07fb646e18dde6b81213ce9c86f/searchlib/src/vespa/searchlib/queryeval/nearest_neighbor_blueprint.cpp#L149) (a.k.a., the query planning phase, i.e., before matching) and during the matching phase those hits are represented as a strict iterator over a [bitvector](https://github.com/vespa-engine/vespa/blob/17514b8f2784bd7a7065084ccbeed720e4f8d9ef/searchlib/src/vespa/searchlib/common/bitvector.h#L27), on top it gives a correct hit estimate (i.e. `<=targetHits`), which allows **weakAnd** to prune documents, which in turn makes the search fast.
+
+### Lexical search with AND
+
+If your lexical retriever is configured with [`grammar: "all"`](https://docs.vespa.ai/en/reference/querying/yql.html#grammar) (i.e., all terms are required to match), then you're not affected by this issue.
+But probably you have low lexical recall to fight against, tradeoffs.
+
+:::{embed}../notebooks/beating-query-planner.ipynb#and_query
+:remove-output: false
+:remove-input: false
+:::
+
+Same **7 ms** as in the **alternative** query.
+
+### Disadvantages of the alternative query
+
+- When somebody reads the query construction code, there **must** be a comment about why it makes sense to duplicate the filters.
+- The YQL is more complicated for seemingly no good reason.
+- The filters are checked twice in each `OR` branch.
+- Maybe one day this optimization will be obsolete, as Vespa might improve the query planner.
+
+### Future work
+
+What if there are more retrievers combined with `OR` operator, e.g. `wand`?
+What about [`match-phase`](https://docs.vespa.ai/en/reference/schemas/schemas.html#match-phase)?
+Not everything is crystal clear for me about the Vespa query execution, but I'm getting there.
 
 ## Conclusion
 
-If you happen to work with hybrid search, feel free to try this optimization.
+When confronted with ENN and high latencies, the instinct is to throw more search threads at the problem and continue with your life.
+Even though this helps to some extent, you might be better off writing your queries in a way that the query execution is more efficient.
 
-## P.S.: where are those nice tables coming from?
+If you're working with the hybrid search, feel free to try this query rewrite.
 
-Vespa CLI has a `vespa inspect profile` that given a Vespa response with the trace data prints those nice tables.
+### P.S.: where are those nice tables coming from?
 
-My script that combines querying and visualizing in one command is [here](https://gist.github.com/dainiusjocas/8b2e7eebfe80f0d710d819632fb46b95):
+[Vespa CLI](https://docs.vespa.ai/en/clients/vespa-cli.html) has a `vespa inspect profile` [command](https://docs.vespa.ai/en/reference/clients/vespa-cli/vespa_inspect.html) which, given a Vespa response with the trace data, prints many nice summary tables.
+
+A script that combines querying and visualizing traces in one command is [here](https://gist.github.com/dainiusjocas/8b2e7eebfe80f0d710d819632fb46b95):
 ```shell
 
 #!/bin/bash
@@ -112,3 +168,12 @@ vespa inspect profile -f v_profile
 # 4. Clean up the pipe when done
 rm v_profile
 ```
+
+### P.P.S.: What if no filters are present?
+
+Surprisingly, the query is fast because **weakAnd** prunes (!) docs freely even when ENN is combined through `OR`:
+
+:::{embed}../notebooks/beating-query-planner.ipynb#no_filters_matching_summary
+:remove-output: false
+:remove-input: true
+:::
