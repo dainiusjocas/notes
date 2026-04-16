@@ -23,13 +23,18 @@ project:
     CSS: Cascading Style Sheet
     NER: Named entity recognition
     Vespa: VErtical Search Platform Architecture
+    ENN: Exact Nearest Neighbor
+    ANN: Approximate Nearest Neighbor
+    YQL: Yahoo! Query Language
+    HNSW: Hierarchical Navigable Small World Graph Index
   # github:
   # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
 site:
   template: book-theme
   title: Dainius Jocas
   options:
-    hide_toc: false
+    hide_outline: false
+    hide_toc: true
     folders: true
     logo_text: " ✨✨✨"
   #   favicon: favicon.ico

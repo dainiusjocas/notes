@@ -24,7 +24,7 @@ Let's demonstrate the issue with a small example application.
 
 ## Experimental setup
 
-The setup runs on [8.673.18](https://hub.docker.com/layers/vespaengine/vespa/8.673.18/images/sha256-81251d6b162725fc7f7703d94482409c9b2d60a38b7feebbbf16932936f6556a) Vespa version.
+The setup runs on Vespa version [8.673.18](https://hub.docker.com/layers/vespaengine/vespa/8.673.18/images/sha256-81251d6b162725fc7f7703d94482409c9b2d60a38b7feebbbf16932936f6556a).
 
 For full details check the [notebook](../notebooks/beating-query-planner.ipynb).
 
@@ -64,13 +64,13 @@ However, the execution of the queries is very different!
 ### Execution
 
 The **baseline** query without tracing takes consistently about **12 ms**. 
-While the altarnative query takes about **7 ms**.
+While the alternative query takes about **7 ms**.
 That is about 56% faster in an index of just 100k docs for the same logic: both queries have provided **5692** docs for the first phase ranking.
 Why then the difference in latency?
 
 ### Traces
 
-Given that ranking profile is the same and it gets the same number of hits, let's focus on the matching phase.
+Given that the ranking profile is the same, and it gets the same number of hits, let's focus on the matching phase.
 
 **Baseline** matching phase summary:
 
@@ -95,9 +95,12 @@ It looks like when the **baseline** query was executed, **weakAnd** couldn't pru
 Probably because **weakAnd** is combined with **NearestNeighbor** through the `OR` operator, and given that all docs match ENN, **weakAnd** is forced to evaluate `OR` on all query terms for each document which is a lot of work!
 In case you wonder, `distanceThreshold` doesn't help.
 
-Now imagine, if you have millions of documents per content node, then depending on the query terms and filtering ratio you now have timeouts due to unnecessary work in the matching phase.
+Now imagine, if you have millions of documents per content node, then depending on the query terms and filtering ratio, you now have multi second latency and probably timeouts due to unnecessary work in the matching phase.
 
 ## Discussion
+
+What other aspects do we know?
+
 ### HNSW index
 
 Even if the tensor field has an [HNSW](https://docs.vespa.ai/en/reference/schemas/schemas.html#index-hnsw) index, when filters are very restrictive, [Vespa executes ENN](https://blog.vespa.ai/tweaking-ann-parameters/).
@@ -120,7 +123,7 @@ Same **7 ms** as in the **alternative** query.
 
 ### Disadvantages of the alternative query
 
-- When somebody reads the query construction code, there **must** be a comment about why it makes sense to duplicate the filters.
+- There **must** be a comment about **why** it makes sense to duplicate the filters.
 - The YQL is more complicated for seemingly no good reason.
 - The filters are checked twice in each `OR` branch.
 - Maybe one day this optimization will be obsolete, as Vespa might improve the query planner.
