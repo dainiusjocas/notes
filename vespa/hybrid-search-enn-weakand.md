@@ -1,10 +1,14 @@
+---
+thumbnail: _static/filters-enn-weeakAnd-query-tree.png
+---
+
 # Strategic Query Shaping for Vespa Hybrid Search
 
 2026-04-15
 
-**TL;DR:** In [Vespa](https://vespa.ai/), when combining **exact nearest neighbor** search with **weakAnd**, it is often more efficient to distribute your filters: `(filters AND ENN) OR (filters AND weakAnd)`. This performs better than the nested approach: `åfilters AND (ENN OR weakAnd)`.
+**TL;DR:** In [Vespa](https://vespa.ai/), when combining **exact nearest neighbor** search with **weakAnd**, it is often more efficient to distribute your filters: `(filters AND ENN) OR (filters AND weakAnd)`. This performs better than the nested approach: `filters AND (ENN OR weakAnd)`.
 
-## Context 
+## Context
 
 [Hybrid search](https://docs.vespa.ai/en/learn/tutorials/hybrid-search) typically means combining vector and lexical retrievers.
 Also, a fact of life is that anything useful typically also requires good ol' filtering.
@@ -49,12 +53,76 @@ The **baseline** YQL:
 :remove-input: true
 :::
 
+```{mermaid}
+graph TD
+    %% Root Node
+    AND1((AND))
+    
+    %% Right Branch
+    OR((OR))
+    ENN((ENN))
+    WA((weakAnd))
+
+    %% Left Branch
+    Filters1((filters))
+    
+    %% Structure
+    AND1 --> Filters1
+    AND1 --> OR
+    OR --> WA
+    OR --> ENN
+    
+    %% Styling for better readability in circular nodes
+    style OR fill:#f96,stroke:#333,stroke-width:2px,rx:100,ry:100
+    style AND1 fill:#bbf,stroke:#333,rx:100,ry:100
+    style ENN fill:#dfd,stroke:#333,rx:100,ry:100
+    style WA fill:#dfd,stroke:#333,rx:100,ry:100
+    style Filters1 fill:#eee,stroke:#333,rx:100,ry:100
+```
+
 The **alternative** YQL:
 
 :::{embed}../notebooks/beating-query-planner.ipynb#yql_alt
 :remove-output: false
 :remove-input: true
 :::
+
+
+```{mermaid}
+graph TD
+    %% Root Node
+    OR((OR))
+    
+    
+    %% Left Branch
+    AND1((AND))
+    Filters1((filters))
+    ENN((ENN))
+    
+    %% Right Branch
+    AND2((AND))
+    Filters2((filters))
+    WA((weakAnd))
+
+    %% Structure
+    OR --> AND1
+    OR --> AND2
+    
+    AND1 --> Filters1
+    AND1 --> ENN
+    
+    AND2 --> Filters2
+    AND2 --> WA
+
+    %% Styling for better readability in circular nodes
+    style OR fill:#f96,stroke:#333,stroke-width:2px,rx:100,ry:100
+    style AND1 fill:#bbf,stroke:#333,rx:100,ry:100
+    style AND2 fill:#bbf,stroke:#333,rx:100,ry:100
+    style ENN fill:#dfd,stroke:#333,rx:100,ry:100
+    style WA fill:#dfd,stroke:#333,rx:100,ry:100
+    style Filters1 fill:#eee,stroke:#333,rx:100,ry:100
+    style Filters2 fill:#eee,stroke:#333,rx:100,ry:100
+```
 
 This clearly preserves the matching logic, it just duplicates the filter `id>1` to both branches.
 However, the execution of the queries is very different!
