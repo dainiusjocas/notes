@@ -5,9 +5,11 @@ project:
   title: Labs
   description: Interesting stuff and brain-dumps
   toc:
-#    - file: index.md
-    - file: README.md
+    - file: index.md
+#    - file: README.md
+#    - file: index.m
     - title: Vespa
+      file: vespa/README.md
       children:
           - pattern: 'vespa/*.md'
     - title: Notebooks
@@ -33,8 +35,9 @@ site:
   template: book-theme
   title: Dainius Jocas
   options:
-    hide_outline: false
-    hide_toc: true
+    style: ./my-style.css
+    hide_outline: true
+    hide_toc: false
     folders: true
     logo_text: " ✨✨✨"
   #   favicon: favicon.ico

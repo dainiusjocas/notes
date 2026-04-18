@@ -1,12 +1,17 @@
 ---
 thumbnail: _static/filters-enn-weeakAnd-query-tree.png
+title: Strategic Query Shaping for Vespa Hybrid Search
+date: 2026-04-15
 ---
 
-# Strategic Query Shaping for Vespa Hybrid Search
+## **TL;DR:**
 
-2026-04-15
+In [Vespa](https://vespa.ai/), when combining **exact nearest neighbor** search with **weakAnd**, it is often more efficient to distribute your filters: `(filters AND ENN) OR (filters AND weakAnd)`. This performs better than the nested approach: `filters AND (ENN OR weakAnd)`.
 
-**TL;DR:** In [Vespa](https://vespa.ai/), when combining **exact nearest neighbor** search with **weakAnd**, it is often more efficient to distribute your filters: `(filters AND ENN) OR (filters AND weakAnd)`. This performs better than the nested approach: `filters AND (ENN OR weakAnd)`.
+:::{dropdown} Table of Contents
+:closed:
+:::{toc}
+:::
 
 ## Context
 
@@ -53,24 +58,28 @@ The **baseline** YQL:
 :remove-input: true
 :::
 
+:::{div} my-custom-panel
+:class: specialized-border highlight-effect
 ```{mermaid}
+%%{init: { "themeCSS": ".label { font-family: sans-serif; } rect.outer { fill: white !important; } svg { background-color: white !important; }" } }%%
+
 graph TD
     %% Root Node
     AND1((AND))
+    
+    %% Left Branch
+    Filters1((filters))
     
     %% Right Branch
     OR((OR))
     ENN((ENN))
     WA((weakAnd))
 
-    %% Left Branch
-    Filters1((filters))
-    
     %% Structure
     AND1 --> Filters1
     AND1 --> OR
-    OR --> WA
     OR --> ENN
+    OR --> WA
     
     %% Styling for better readability in circular nodes
     style OR fill:#f96,stroke:#333,stroke-width:2px,rx:100,ry:100
@@ -79,6 +88,7 @@ graph TD
     style WA fill:#dfd,stroke:#333,rx:100,ry:100
     style Filters1 fill:#eee,stroke:#333,rx:100,ry:100
 ```
+:::
 
 The **alternative** YQL:
 
@@ -87,6 +97,8 @@ The **alternative** YQL:
 :remove-input: true
 :::
 
+:::{div} my-custom-panel
+:class: specialized-border highlight-effect
 
 ```{mermaid}
 graph TD
@@ -123,6 +135,7 @@ graph TD
     style Filters1 fill:#eee,stroke:#333,rx:100,ry:100
     style Filters2 fill:#eee,stroke:#333,rx:100,ry:100
 ```
+:::
 
 This clearly preserves the matching logic, it just duplicates the filter `id>1` to both branches.
 However, the execution of the queries is very different!
