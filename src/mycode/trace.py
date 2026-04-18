@@ -57,3 +57,12 @@ def get_matching_summary(trace: str) -> str | None:
         substring = match.group(0)
         return substring
     return None
+
+
+def get_breakdown(trace: str) -> str | None:
+    match = re.search(r"looking into node.*───┘.?(?=ann|found)", trace,
+                      flags=re.MULTILINE | re.DOTALL)
+    if match:
+        substring = match.group(0)
+        return substring
+    return None
