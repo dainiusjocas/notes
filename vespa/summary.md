@@ -1,6 +1,6 @@
 # On Fetching Summary
 
-In Vespa [search execution](https://docs.vespa.ai/en/query-api.html#query-execution) is two phase:
+In Vespa [search execution](https://docs.vespa.ai/en/query-api.html#query-execution) is a two-phase process:
 
 1. Search
 2. Fill
@@ -47,4 +47,3 @@ However, when trying this out, I've found out that it does not work.
 https://docs.vespa.ai/en/ranking-expressions-features.html#accessing-feature-function-values-in-results
 
 TODO: A design flaw in Vespa when it comes to document IDs.
-

@@ -8,10 +8,9 @@ site:
 
 # About this site
 
-I must learn more every day.
-Here are some of my experiments.
+> I must end the day a bit cleverer that I've started.
+> 
+Here are the main topics that occupy my brain.
 
-:::{toc} Table of Contents
-:context: children
-:class: dropdown
+:::{toc} Contents
 :::

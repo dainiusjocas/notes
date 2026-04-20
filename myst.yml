@@ -11,14 +11,26 @@ project:
     - title: Vespa
       file: vespa/README.md
       children:
-          - pattern: 'vespa/*.md'
+        - file: vespa/hybrid-search-enn-weakand.md
+          title: Strategic Query Shaping for Vespa Hybrid Search
+        - file: vespa/devex.md
+          title: Bridging the gap between the laptop and production
+        - file: vespa/tracing.md
+          title: Tips and Tricks for Tracing Vespa queries
+          hidden: true
+        - file: vespa/acorn.md
+          title: Acorn
+          hidden: true
+        - pattern: 'vespa/*.md'
+          hidden: true
     - title: Notebooks
+      file: notebooks/README.md
       children:
         - pattern: 'notebooks/*.ipynb'
     - title: Scratch
-      hidden: true
       children:
         - pattern: 'scratch/*.md'
+          hidden: true
   keywords: ["Vespa", "Lucene", "Elasticsearch"]
   authors: ["Dainius Jocas"]
   abbreviations:
@@ -29,6 +41,7 @@ project:
     ANN: Approximate Nearest Neighbor
     YQL: Yahoo! Query Language
     HNSW: Hierarchical Navigable Small World Graph Index
+    CLI: Command Line Interface
   # github:
   # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
 site:
