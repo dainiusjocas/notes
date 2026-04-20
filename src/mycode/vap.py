@@ -1,7 +1,8 @@
 import os
 import re
+from typing import Iterable
+
 import requests
-import logging
 import json
 from shutil import copyfile
 
@@ -111,7 +112,7 @@ def demo_application_package():
     )
 
 
-def feed(client: Vespa, docs: list[dict]=None, schema='doc', namespace='doc'):
+def feed(client: Vespa, docs: Iterable[dict]=None, schema='doc', namespace='doc', feed_callback=feed_callback):
     """
     Convenience method to feed some docs into Vespa by specifying only the actual fields.
     :param client:
@@ -127,4 +128,7 @@ def feed(client: Vespa, docs: list[dict]=None, schema='doc', namespace='doc'):
         schema=schema,
         namespace=namespace,
         callback=feed_callback,
+        max_queue_size=10000,
+        max_workers= 16,
+        max_connections= 16,
     )

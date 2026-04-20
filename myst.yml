@@ -15,6 +15,10 @@ project:
           title: Strategic Query Shaping for Vespa Hybrid Search
         - file: vespa/devex.md
           title: Bridging the gap between the laptop and production
+        - file: vespa/range-filter-ordering.md
+          title: Range Filter Ordering
+        - file: vespa/range-filter-hacking.md
+          hidden: true
         - file: vespa/tracing.md
           title: Tips and Tricks for Tracing Vespa queries
           hidden: true
