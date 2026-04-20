@@ -106,3 +106,5 @@ Crazy slow.
 ## Wouldn't it be better to use first-phase-ranking instead of range filters on no fast-search field?
 
 [Using](https://vinted.engineering/2025/11/18/dense-retrieval/) the global ranking phase as a filter
+
+## How about using match-phase limiter with different cardinalities?
