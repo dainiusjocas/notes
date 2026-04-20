@@ -1,10 +1,8 @@
 ---
-thumbnail: ../_static/foo.png
+date: 2026-04-21
 ---
 
 # Range filters are expensive, what can we do about it?
-
-2026-04-17
 
 TL;DR: be careful with range filters on high-cardinality fields.
 
