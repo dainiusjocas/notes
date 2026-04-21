@@ -163,6 +163,7 @@ Vespa managed to collapse the filters!
 By reducing the field cardinality, using `fast-search` strategically, and rearranging range filters by field, we reduced the latency from ~187 ms down to ~119 ms (-36%)!
 All while keeping the memory footprint at the same level.
 But the query now is more complicated.
+And such a rewrite might not be worth if/when Vespa optimizes range queries. 
 What other rewrites yield better latency with range filters?
 
 ## P.S. Why simply dropping `fast-search` is not good enough?
