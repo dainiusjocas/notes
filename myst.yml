@@ -17,6 +17,7 @@ project:
           title: Bridging the gap between the laptop and production
         - file: vespa/range-filter-ordering.md
           title: Range Filter Ordering
+        - file: vespa/exact-nearest-neighbor-and-target-hits.md
         - file: vespa/range-filter-hacking.md
           hidden: true
         - file: vespa/tracing.md
