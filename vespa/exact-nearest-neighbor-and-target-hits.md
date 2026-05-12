@@ -48,7 +48,10 @@ The probability that the second element is the new maximum is $\frac{1}{2}$, etc
 For large sequences the number of "temporary maximums" until the global maximum is discovered is approximately equal to $ln(N) + {\displaystyle \gamma }$, where $\gamma$ is the [Euler-Mascheroni constant](https://en.wikipedia.org/wiki/Euler%27s_constant).
 
 
-Distances between query and document vectors can be thought as a list of random numbers, and we want to find the `top-k=targetHits` closest document vectors with the ENN search.
+Distances between query and document vectors can be roughly thought as a list of random numbers, and we want to find the `top-k=targetHits` closest document vectors with the ENN search.
+Of course, your actual indices might not be entirely in a random order.
+E.g., docs are iterated from oldest to newest, and the query targets some event that happened in the past, and there are no recent docs about it.
+But despite such nuances, the number of docs exposed to the first phase ranking is logarithm from the total number of docs.
 
 When we need to track the `targetHits` best elements, then the expected number of the priority queue "updates" is
 $$
@@ -65,7 +68,7 @@ So, the higher the `targetHits` the more docs are exposed to the first-phase ran
 
 ## Sidequest: `targetHits=1`
 
-Comming back to Vespa land, when `targetHits=1` then formula boils down to: `1 + ln(totalDocCount)`.
+Coming back to Vespa land, when `targetHits=1` then formula boils down to: `1 + ln(totalDocCount)`.
 `1` is because the first element always is added into the priority queue during the search.
 The `ln(totalDocCount)` captures the sum of probabilities that the n-th element is the maximum.
 When the list has only one element then `ln(1)=0`, and the final sum is 1.
