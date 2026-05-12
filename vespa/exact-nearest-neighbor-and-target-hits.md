@@ -1,5 +1,5 @@
 ---
-thumbnail: _static/filters-enn-weeakAnd-query-tree.png
+thumbnail: _static/brute-force-search.png
 title: How does targetHits impact the number of matches in the ENN Search?
 date: 2026-05-12
 ---
