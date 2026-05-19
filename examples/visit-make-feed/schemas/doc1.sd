@@ -1,0 +1,7 @@
+schema doc1 {
+    document doc1 {
+        field my_id type string {
+            indexing: summary
+        }
+    }
+}
