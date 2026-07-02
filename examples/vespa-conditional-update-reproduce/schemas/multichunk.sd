@@ -1,0 +1,16 @@
+schema multichunk {
+
+    document multichunk {
+
+        # payload field mutated by the guarded operation
+        field counter type int {
+            indexing: attribute | summary
+        }
+
+        # idempotency marker: the condition tests membership here,
+        # and the same update op adds to it (self-invalidating condition)
+        field processed_ids type array<int> {
+            indexing: summary
+        }
+    }
+}
