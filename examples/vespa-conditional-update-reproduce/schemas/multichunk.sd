@@ -10,7 +10,7 @@ schema multichunk {
         # idempotency marker: the condition tests membership here,
         # and the same update op adds to it (self-invalidating condition)
         field processed_ids type array<int> {
-            indexing: summary
+            indexing: attribute | summary
         }
     }
 }

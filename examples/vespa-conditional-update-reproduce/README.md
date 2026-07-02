@@ -58,3 +58,64 @@ Notes:
 - Conditions must prefix fields with the document type name
   (`multichunk.processed_ids`), and string literals, if you ever use a
   string-typed marker field, must be double-quoted (`\"` inside JSON).
+
+
+## Output
+
+Vespa version: 8.712.7
+
+```shell
+### 0. clean slate + create document
+== DELETE doc1 -> HTTP 200
+{"pathId":"/document/v1/test/multichunk/docid/doc1","id":"id:test:multichunk::doc1"}
+
+
+== PUT doc1 -> HTTP 200
+{"pathId":"/document/v1/test/multichunk/docid/doc1","id":"id:test:multichunk::doc1"}
+
+
+### A. correct condition, first application of value 100  (expect 200)
+== guarded add 100 (1st) -> HTTP 200
+{"pathId":"/document/v1/test/multichunk/docid/doc1","id":"id:test:multichunk::doc1"}
+
+
+### A. exact replay of the same operation  (expect 412 TEST_AND_SET_CONDITION_FAILED)
+== guarded add 100 (replay) -> HTTP 412
+{"pathId":"/document/v1/test/multichunk/docid/doc1","id":"id:test:multichunk::doc1","message":"[UNKNOWN(251013) @ tcp/df4b845c44ce:19115/default]: ReturnCode(TEST_AND_SET_CONDITION_FAILED, Condition did not match document nodeIndex=0 bucket=2000000000000083) "}
+
+
+### B. second distinct value 200  (expect 200; array now has 2 elements)
+== guarded add 200 (1st) -> HTTP 200
+{"pathId":"/document/v1/test/multichunk/docid/doc1","id":"id:test:multichunk::doc1"}
+
+
+### B. replay both guarded values against the 2-element array  (expect 412 twice)
+== guarded add 100 (replay, 2-elem array) -> HTTP 200
+{"pathId":"/document/v1/test/multichunk/docid/doc1","id":"id:test:multichunk::doc1"}
+
+
+== guarded add 200 (replay, 2-elem array) -> HTTP 200
+{"pathId":"/document/v1/test/multichunk/docid/doc1","id":"id:test:multichunk::doc1"}
+
+
+### C. BROKEN variant: != is existentially quantified
+###    array is [100, 200]; 200 != 100 exists -> condition TRUE -> write goes through  (expect 200, counter over-incremented)
+== != trap: add 100 again -> HTTP 200
+{"pathId":"/document/v1/test/multichunk/docid/doc1","id":"id:test:multichunk::doc1"}
+
+
+### D. BROKEN variant: single-quoted literal is not valid selector syntax  (expect 4xx parse error)
+== single-quote condition -> HTTP 412
+{"pathId":"/document/v1/test/multichunk/docid/doc1","id":"id:test:multichunk::doc1","message":"[UNKNOWN(251013) @ tcp/df4b845c44ce:19115/default]: ReturnCode(TEST_AND_SET_CONDITION_FAILED, Condition did not match document nodeIndex=0 bucket=2000000000000083) "}
+
+
+### Final document state
+###   counter should be 3 (A once, B once, C's != trap once) -- the '4th' increment proves C is unsafe.
+###   processed_ids should be [100, 200, 100] -- duplicate 100 from the != trap (arrays don't dedup on add).
+== GET doc1 -> HTTP 200
+{"pathId":"/document/v1/test/multichunk/docid/doc1","id":"id:test:multichunk::doc1","fields":{"processed_ids":[100,200,100,200,100],"counter":5}}
+```
+
+The expected outcome would be counter=3, and processed_ids=[100,200,100].
+
+Also tried to remove `attribute` from the `processed_ids` field, but the result is the same.
