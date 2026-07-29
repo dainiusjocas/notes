@@ -1,0 +1,74 @@
+schema multichunk {
+    document multichunk {
+        field identifiers type array<int> {
+            indexing: attribute | summary
+        }
+    }
+
+    rank-profile demo {
+        function offset_to_value() {
+            # the type it returns is `tensor<float>(offset{},value{})`
+            expression {
+                tensorFromLabelsWithOffset(
+                    attribute(identifiers),
+                    value,
+                    offset # that represents natural order or arrival of feeding requests, [0..N]
+                )
+            }
+        }
+        function some_offsets() {
+            # the type it returns is `tensor<float>(offset{})`
+            expression {
+                tensor<float>(offset{}):{
+                    {offset: "0"}: 1,
+                    {offset: "1"}: 1
+                }
+            }
+        }
+        match-features {
+            offset_to_value
+            some_offsets
+        }
+        rank-profile allgood inherits demo {
+            function into_offsets() {
+                # the type it returns is `tensor<float>(offset{})`
+                expression {
+                    reduce(
+                        # inline tensor of the same type as returned by `tensorFromLabelsWithOffset`
+                        tensor<float>(offset{}, value{}):{
+                            {offset: "0", value: "2"}: 1,
+                            {offset: "1", value: "3"}: 1
+                        },
+                        max, value)
+                }
+            }
+            function merged() {
+                expression {
+                    merge(some_offsets(), into_offsets(), f(a, b)(a + b))
+                }
+            }
+            match-features {
+                offset_to_value
+                some_offsets
+                merged
+            }
+        }
+        #rank-profile problem inherits demo {
+        #    function into_offsets() {
+        #        expression {
+        #            reduce(offset_to_value(), max, value)
+        #        }
+        #    }
+        #    function merged() {
+        #        expression {
+        #            merge(some_offsets(), into_offsets(), f(a, b)(a + b))
+        #        }
+        #    }
+        #    match-features {
+        #        offset_to_value
+        #        some_offsets
+        #        merged
+        #    }
+        #}
+    }
+}
