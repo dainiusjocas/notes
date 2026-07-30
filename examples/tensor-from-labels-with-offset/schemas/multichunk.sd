@@ -53,6 +53,7 @@ schema multichunk {
                 merged
             }
         }
+        # If this ranking profile is uncommented then app fails to deploy!
         #rank-profile problem inherits demo {
         #    function into_offsets() {
         #        expression {
