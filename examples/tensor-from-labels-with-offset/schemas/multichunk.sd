@@ -12,7 +12,7 @@ schema multichunk {
                 tensorFromLabelsWithOffset(
                     attribute(identifiers),
                     value,
-                    offset # that represents natural order or arrival of feeding requests, [0..N]
+                    offset
                 )
             }
         }
@@ -93,17 +93,22 @@ schema multichunk {
                 combining
             }
         }
+        
         #rank-profile problem_2 inherits demo {
         #    function combining() {
         #        expression {
         #            # oven though join works, the merge can infer types correctly
         #            merge(
         #                # inline tensor of the same type as returned by `tensorFromLabelsWithOffset`
-        #                tensor<float>(offset{}, value{}):{
+        #                tensor(offset{}, value{}):{
         #                    {offset: "0", value: "2"}: 1,
         #                    {offset: "1", value: "3"}: 1
         #                },
-        #                offset_to_value,
+        #                tensorFromLabelsWithOffset(
+        #                    attribute(identifiers),
+        #                    value,
+        #                    offset
+        #                ),
         #                f(a, b)(a + b)
         #            )
         #        }
@@ -112,6 +117,7 @@ schema multichunk {
         #        combining
         #    }
         #}
+        
         rank-profile allgood_3 inherits demo {
             function merging() {
                 expression {
