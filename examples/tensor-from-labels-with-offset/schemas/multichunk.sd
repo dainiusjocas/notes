@@ -1,0 +1,177 @@
+schema multichunk {
+    document multichunk {
+        field identifiers type array<int> {
+            indexing: attribute | summary
+        }
+    }
+
+    rank-profile demo {
+        function offset_to_value() {
+            # the type it returns is `tensor<float>(offset{},value{})`
+            expression {
+                tensorFromLabelsWithOffset(
+                    attribute(identifiers),
+                    value,
+                    offset
+                )
+            }
+        }
+        function some_offsets() {
+            # the type it returns is `tensor<float>(offset{})`
+            expression {
+                tensor<float>(offset{}):{
+                    {offset: "0"}: 1,
+                    {offset: "1"}: 1
+                }
+            }
+        }
+        match-features {
+            offset_to_value
+            some_offsets
+        }
+        
+        rank-profile allgood_1 inherits demo {
+            function into_offsets() {
+                # the type it returns is `tensor<float>(offset{})`
+                expression {
+                    reduce(
+                        # inline tensor of the same type as returned by `tensorFromLabelsWithOffset`
+                        tensor<float>(offset{}, value{}):{
+                            {offset: "0", value: "2"}: 1,
+                            {offset: "1", value: "3"}: 1
+                        },
+                        max,
+                        value)
+                }
+            }
+            function merged() {
+                expression {
+                    # merge correctly infers types
+                    merge(some_offsets(), into_offsets(), f(a, b)(a + b))
+                }
+            }
+            match-features {
+                offset_to_value
+                some_offsets
+                merged
+            }
+        }
+
+        # If this ranking profile is uncommented then app fails to deploy!
+        #rank-profile problem_1 inherits demo {
+        #    function into_offsets() {
+        #        expression {
+        #            reduce(offset_to_value(), max, value)
+        #        }
+        #    }
+        #    function merged() {
+        #        expression {
+        #            merge(some_offsets(), into_offsets(), f(a, b)(a + b))
+        #        }
+        #    }
+        #    match-features {
+        #        offset_to_value
+        #        some_offsets
+        #        merged
+        #    }
+        #}
+
+        rank-profile allgood_2 inherits demo {
+            function joining() {
+                # joining doesn't error
+                expression {
+                    join(
+                        # inline tensor of the same type as returned by `tensorFromLabelsWithOffset`
+                        tensor<float>(offset{}, value{}):{
+                            {offset: "0", value: "2"}: 1,
+                            {offset: "1", value: "3"}: 1
+                        },
+                        offset_to_value,
+                        f(a, b)(a + b)
+                    )
+                }
+            }
+            match-features inherits demo {
+                joining
+            }
+        }
+        
+        #rank-profile problem_2 inherits demo {
+        #    function merging() {
+        #        expression {
+        #            # the merge can't infer types correctly!
+        #            # if `merge` is replaced with `join` then app deploys.
+        #            merge(
+        #                # inline tensor of the same type as returned by `tensorFromLabelsWithOffset`
+        #                tensor(offset{}, value{}):{
+        #                    {offset: "0", value: "2"}: 1,
+        #                    {offset: "1", value: "3"}: 1
+        #                },
+        #                tensorFromLabelsWithOffset(
+        #                    attribute(identifiers),
+        #                    value,
+        #                    offset
+        #                ),
+        #                f(a, b)(a + b)
+        #            )
+        #        }
+        #    }
+        #    match-features inherits demo {
+        #        merging
+        #    }
+        #}
+        
+        rank-profile allgood_3 inherits demo {
+            function merging() {
+                expression {
+                    # Merging tensorFromLabels (no offsets) with an inlined tensor works as expected.
+                    merge(
+                        tensorFromLabels(attribute(identifiers), value),
+                        tensor<float>(value{}):{
+                            {value: "2"}: 1,
+                            {value: "3"}: 1
+                        },
+                        f(a, b)(a + b)
+                    )
+                }
+            }
+            match-features {
+                merging
+            }
+        }
+
+        rank-profile workaround inherits demo {
+            function helper() {
+                # creates a tensor matching the type of the tensorFromLabelsWithOffset
+                expression {
+                    tensor(offset{}, value{}):{
+                        {offset: "0", value: "2"}: 1,
+                        {offset: "1", value: "3"}: 1
+                    }
+                }
+            }
+            function merging() {
+                expression {
+                    merge(
+                        helper(),
+                        # if the tensor is joined with inlined identity tensor then types match
+                        join(
+                            tensorFromLabelsWithOffset(
+                                attribute(identifiers),
+                                value,
+                                offset
+                            ),
+                            helper(),
+                            f(a, b)(a)
+                        ),
+                        f(a, b)(a + b)
+                    )
+                }
+            }
+            match-features {
+                helper
+                merging
+            }
+        }
+    }
+}
