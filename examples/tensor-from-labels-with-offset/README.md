@@ -212,3 +212,80 @@ tensor<float>(offset{}) != tensor()
     }
 }
 ```
+
+Workaround:
+```shell
+ ✗ vespa query 'select * from sources * where true' 'ranking.profile=demo.workaround' -t local
+{
+    "root": {
+        "children": [
+            {
+                "fields": {
+                    "documentid": "id:multichunk:multichunk::1",
+                    "identifiers": [
+                        2,
+                        3
+                    ],
+                    "matchfeatures": {
+                        "helper": {
+                            "cells": [
+                                {
+                                    "address": {
+                                        "offset": "0",
+                                        "value": "2"
+                                    },
+                                    "value": 1
+                                },
+                                {
+                                    "address": {
+                                        "offset": "1",
+                                        "value": "3"
+                                    },
+                                    "value": 1
+                                }
+                            ],
+                            "type": "tensor(offset{},value{})"
+                        },
+                        "merging": {
+                            "cells": [
+                                {
+                                    "address": {
+                                        "offset": "0",
+                                        "value": "2"
+                                    },
+                                    "value": 2
+                                },
+                                {
+                                    "address": {
+                                        "offset": "1",
+                                        "value": "3"
+                                    },
+                                    "value": 2
+                                }
+                            ],
+                            "type": "tensor(offset{},value{})"
+                        }
+                    },
+                    "sddocname": "multichunk"
+                },
+                "id": "id:multichunk:multichunk::1",
+                "relevance": 0,
+                "source": "content"
+            }
+        ],
+        "coverage": {
+            "coverage": 100,
+            "documents": 1,
+            "full": true,
+            "nodes": 1,
+            "results": 1,
+            "resultsFull": 1
+        },
+        "fields": {
+            "totalCount": 1
+        },
+        "id": "toplevel",
+        "relevance": 1
+    }
+}
+```
