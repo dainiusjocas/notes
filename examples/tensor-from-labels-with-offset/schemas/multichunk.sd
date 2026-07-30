@@ -40,7 +40,8 @@ schema multichunk {
                             {offset: "0", value: "2"}: 1,
                             {offset: "1", value: "3"}: 1
                         },
-                        max, value)
+                        max,
+                        value)
                 }
             }
             function merged() {
@@ -76,7 +77,8 @@ schema multichunk {
         #}
 
         rank-profile allgood_2 inherits demo {
-            function combining() {
+            function joining() {
+                # joining doesn't error
                 expression {
                     join(
                         # inline tensor of the same type as returned by `tensorFromLabelsWithOffset`
@@ -90,14 +92,15 @@ schema multichunk {
                 }
             }
             match-features inherits demo {
-                combining
+                joining
             }
         }
         
         #rank-profile problem_2 inherits demo {
-        #    function combining() {
+        #    function merging() {
         #        expression {
-        #            # even though join works, the merge can infer types correctly
+        #            # the merge can't infer types correctly!
+        #            # if `merge` is replaced with `join` then app deploys.
         #            merge(
         #                # inline tensor of the same type as returned by `tensorFromLabelsWithOffset`
         #                tensor(offset{}, value{}):{
@@ -114,14 +117,14 @@ schema multichunk {
         #        }
         #    }
         #    match-features inherits demo {
-        #        combining
+        #        merging
         #    }
         #}
         
         rank-profile allgood_3 inherits demo {
             function merging() {
                 expression {
-                    # Merging tensorFromLabels with an inlined tensor works as expected.
+                    # Merging tensorFromLabels (no offsets) with an inlined tensor works as expected.
                     merge(
                         tensorFromLabels(attribute(identifiers), value),
                         tensor<float>(value{}):{
@@ -131,7 +134,6 @@ schema multichunk {
                         f(a, b)(a + b)
                     )
                 }
-
             }
             match-features {
                 merging
@@ -150,9 +152,7 @@ schema multichunk {
             }
             function merging() {
                 expression {
-                    # oven though join works, the merge can infer types correctly
                     merge(
-                        # inline tensor of the same type as returned by `tensorFromLabelsWithOffset`
                         helper(),
                         # if the tensor is joined with inlined identity tensor then types match
                         join(
