@@ -167,3 +167,48 @@ The function 'merged' is invalid:
 Types in merge() dimensions mismatch:
 tensor<float>(offset{}) != tensor()
 ```
+
+```shell
+✗ vespa query 'select * from sources * where true' 'ranking.profile=demo.allgood_3' -t local
+{
+    "root": {
+        "children": [
+            {
+                "fields": {
+                    "documentid": "id:multichunk:multichunk::1",
+                    "identifiers": [
+                        2,
+                        3
+                    ],
+                    "matchfeatures": {
+                        "merging": {
+                            "cells": {
+                                "2": 2,
+                                "3": 2
+                            },
+                            "type": "tensor(value{})"
+                        }
+                    },
+                    "sddocname": "multichunk"
+                },
+                "id": "id:multichunk:multichunk::1",
+                "relevance": 0,
+                "source": "content"
+            }
+        ],
+        "coverage": {
+            "coverage": 100,
+            "documents": 1,
+            "full": true,
+            "nodes": 1,
+            "results": 1,
+            "resultsFull": 1
+        },
+        "fields": {
+            "totalCount": 1
+        },
+        "id": "toplevel",
+        "relevance": 1
+    }
+}
+```

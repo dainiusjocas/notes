@@ -112,5 +112,24 @@ schema multichunk {
         #        combining
         #    }
         #}
+        rank-profile allgood_3 inherits demo {
+            function merging() {
+                expression {
+                    # Merging tensorFromLabels with the inlined tensor works as expected.
+                    merge(
+                        tensorFromLabels(attribute(identifiers), value),
+                        tensor<float>(value{}):{
+                            {value: "2"}: 1,
+                            {value: "3"}: 1
+                        },
+                        f(a, b)(a + b)
+                    )
+                }
+
+            }
+            match-features {
+                merging
+            }
+        }
     }
 }
