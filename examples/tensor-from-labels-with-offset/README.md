@@ -82,7 +82,7 @@ results in:
 note the type of tensor is `tensor<float>(offset{},value{})`.
 
 ```shell
-vespa query 'select * from sources * where true' 'ranking.profile=demo.allgood' -t local
+vespa query 'select * from sources * where true' 'ranking.profile=demo.allgood_1' -t local
 ```
 returns
 ```json
