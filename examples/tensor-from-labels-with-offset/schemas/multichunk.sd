@@ -97,7 +97,7 @@ schema multichunk {
         #rank-profile problem_2 inherits demo {
         #    function combining() {
         #        expression {
-        #            # oven though join works, the merge can infer types correctly
+        #            # even though join works, the merge can infer types correctly
         #            merge(
         #                # inline tensor of the same type as returned by `tensorFromLabelsWithOffset`
         #                tensor(offset{}, value{}):{
@@ -121,7 +121,7 @@ schema multichunk {
         rank-profile allgood_3 inherits demo {
             function merging() {
                 expression {
-                    # Merging tensorFromLabels with the inlined tensor works as expected.
+                    # Merging tensorFromLabels with an inlined tensor works as expected.
                     merge(
                         tensorFromLabels(attribute(identifiers), value),
                         tensor<float>(value{}):{
@@ -134,6 +134,38 @@ schema multichunk {
 
             }
             match-features {
+                merging
+            }
+        }
+
+        rank-profile workaround inherits demo {
+            function merging() {
+                expression {
+                    # oven though join works, the merge can infer types correctly
+                    merge(
+                        # inline tensor of the same type as returned by `tensorFromLabelsWithOffset`
+                        tensor(offset{}, value{}):{
+                            {offset: "0", value: "2"}: 1,
+                            {offset: "1", value: "3"}: 1
+                        },
+                        # if the tensor is joined with inlined identity tensor then types match
+                        join(
+                            tensorFromLabelsWithOffset(
+                                attribute(identifiers),
+                                value,
+                                offset
+                            ),
+                            tensor(offset{}, value{}):{
+                                {offset: "0", value: "2"}: 1,
+                                {offset: "1", value: "3"}: 1
+                            },
+                            f(a, b)(a + b)
+                        ),
+                        f(a, b)(a + b)
+                    )
+                }
+            }
+            match-features inherits demo {
                 merging
             }
         }
