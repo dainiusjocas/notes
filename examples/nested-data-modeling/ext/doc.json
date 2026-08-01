@@ -1,0 +1,20 @@
+{
+  "id": "id:example:doc::1",
+  "fields": {
+    "title": "Title",
+    "chunks": [
+      {
+        "text": "intro",
+        "chunk_index": 1,
+        "chunk_tensor": [1],
+        "entities": ["person1", "location1"]
+      },
+      {
+        "text": "outro",
+        "chunk_index": 2,
+        "chunk_tensor": [2],
+        "entities": ["date1", "org1"]
+      }
+    ]
+  }
+}
