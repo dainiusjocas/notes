@@ -13,6 +13,8 @@ project:
       children:
         - file: vespa/hybrid-search-enn-weakand.md
           title: Strategic Query Shaping for Vespa Hybrid Search
+        - file: vespa/filter_subspaces-threshold-trick.md
+          title: Tensor Filtering with Dynamic Thresholds
         - file: vespa/devex.md
           title: Bridging the gap between the laptop and production
         - file: vespa/range-filter-ordering.md
