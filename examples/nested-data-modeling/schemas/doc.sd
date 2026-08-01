@@ -1,0 +1,42 @@
+schema doc {
+  document doc {
+    field title type string {
+      indexing: index
+    }
+    struct chunk {
+      field text type string {}
+      field entities type array<string> {}
+      field chunk_index type int {}
+      field chunk_tensor type tensor<float>(x[1]) {}
+    }
+    field chunks type array<chunk> {
+      indexing: summary
+      struct-field chunk_index {
+          indexing: attribute
+          attribute: fast-search
+      }
+    }
+  }
+  field text type array<string> {
+    indexing: input chunks | for_each{ get_field text } | index
+    alias: chunk.text
+  }
+  field entities type array<string> {
+    indexing {
+      input chunks |
+      for_each {
+        get_field entities |
+        join " " | # join the array of chunk entities
+      }
+      join " " |   # join joined entities from all chunks
+      split " " |  # split into individual entity strings
+      attribute    # exact matching
+    }
+  }
+  # Doesn't work, needs an embedder component `tensor_parser` registered
+  #field chunk_tensors type tensor<float>(offset{}, x[1]) {
+  #  indexing {
+  #    input chunks | for_each{ get_field chunk_tensor | to_string } | embed tensor_parser | attribute
+  #  }
+  #}
+}
