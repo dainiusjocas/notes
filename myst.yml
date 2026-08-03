@@ -17,6 +17,8 @@ project:
           title: Tensor Filtering with Dynamic Thresholds
         - file: vespa/nested-data-modeling.md
           title: Nested Data Modeling
+        - file: vespa/layered-ranking-gotchas.md
+          title: Layered Ranking Gotchas
         - file: vespa/devex.md
           title: Bridging the gap between the laptop and production
         - file: vespa/range-filter-ordering.md

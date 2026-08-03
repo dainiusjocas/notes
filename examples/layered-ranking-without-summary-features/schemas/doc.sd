@@ -1,0 +1,55 @@
+schema doc {
+  document doc {
+    field chunks type array<string> {
+      indexing: index | summary
+      summary {
+        select-elements-by: best_chunks
+      }
+    }
+    struct chunk {
+      field idx type int {}
+    }
+    field meta type array<chunk> {
+      indexing: summary
+      struct-field idx {
+        indexing: attribute
+      }
+    }
+  }
+  document-summary demo {
+    summary chunks {}
+  }
+  rank-profile default {
+    function best_chunks() {
+        expression: top(2, elementwise(bm25(chunks), chunk, float))
+    }
+    first-phase {
+        expression: bm25(chunks)
+    }
+    summary-features: best_chunks
+    rank-profile demo inherits default {
+    }
+  }
+  rank-profile demo2 {
+    first-phase {
+      expression: 0
+    }
+    function worst_chunks() {
+      expression: 1
+    }
+    summary-features: worst_chunks
+  }
+  rank-profile demo3 inherits default {
+    inputs {
+      query(chunk_selection) tensor(offset{}):{"0": 1.0, "1": 1.0}
+    }
+    function best_chunks() {
+      expression: query(chunk_selection)
+    }
+  }
+  rank-profile demo4 inherits default {
+    function best_chunks() {
+      expression: reduce(tensorFromLabelsWithOffset(attribute(meta.idx), "label", "offset"), max, label)
+    }
+  }
+}
