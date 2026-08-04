@@ -4,11 +4,13 @@ title: Hoist Tensors with an Embedder Hack
 date: 2026-08-04
 ---
 
-## TL;DR: Embedder Converts Strings to Tensor
+## TL;DR: 
+
+Serialize tensor to string, use `Embedder` to deserialize, and store in the synthetic field.
 
 ## Problem
 
-Imagine that embeddings are fed into Vespa, and your schema already looks like this:
+Say that embeddings are fed into Vespa, and your schema already looks like this:
 
 ```text
 schema doc {
@@ -22,26 +24,27 @@ schema doc {
   }
 }
 ```
-you need to support nearestNeighbor queries, and you can't really change the data shape upstream.
-Currently Vespa doesn't support NN queries on tensors that are inside an array of structs.
-To support NN queries the tensor must be a top-level field with one indexed dimension and optional mapped dimensions.
+You need to support `nearestNeighbor` (NN) queries on the `embedding` data.
+To support NN queries the embedding tensor must be a top-level document field with one indexed dimension and optional mapped dimensions.[^support]
+[^support]: As of 8.731.17, Vespa doesn't support NN queries on tensors that are inside an array of structs. You can only store it in the docstore.
 In this particular case the top level field with type `tensor<float>(offset{}, x[1])`.
-How to do it?
+How to do it, if you can't change the data shape upstream?
 
-One option is to write a document processor that hoists the tensor into a top-level document on which you can put an HNSW index.
-But the docproc has a lot of finicky work to do.
-Also testing of such docproc is not trivial.
+One option is to write a document processor that hoists the tensor into a top-level document on which you can slap an HNSW index.
+But the docproc has a lot of finicky work to do!
+Also, testing of such docproc is not trivial.
 
 We want to get stuff done in the indexing language!
 
 ## Hack
 
 Let's see how we can bend Vespa Embedder abstraction to help us.
-Embedder takes a string (or a list of strings) and converts them into a tensor.
-When a list of strings is passed, then the output tensor is mixed with one mapped dimension for offset and one indexed dimension for the actual embedding.
-Nice, offset calculations are already done for us.
+An [`Embedder`](https://github.com/vespa-engine/vespa/blob/b5c6717954f9ff8bf08246346e0e9e6aee0ba22f/indexinglanguage/src/main/java/com/yahoo/vespa/indexinglanguage/expressions/EmbedExpression.java#L44) takes a string (or a list of strings) and converts them into a tensor.
+When a list of strings is passed, then the output is a mixed  tensor with one mapped dimension for the offset and one indexed dimension for the actual embedding.[^dimensions]
+[^dimensions]: [There are several valid](https://github.com/vespa-engine/vespa/blob/b5c6717954f9ff8bf08246346e0e9e6aee0ba22f/indexinglanguage/src/main/java/com/yahoo/vespa/indexinglanguage/expressions/EmbedExpression.java#L396-L406) dimensionality targets for the tensor.
+Nice, offset handling are already done for us.
 
-So, what if in the indexing language we serialize the tensors we have in the array of structs into string, pass that into a custom `Embedder`, in the embedder we just deserialize the tensor, and voila!
+So, what if in the indexing language we serialize the tensors we have in the array of structs into  astring, then pass that string into a custom `Embedder`, in the embedder we just deserialize the tensor, profit!
 
 The demo application is here.
 
@@ -138,5 +141,6 @@ vespa query \
 ## Conclusion
 
 By wiring in a custom embedder that wraps `Tensor.from` method, we've got the indexing language to do all the complicated work of hoisting a tensor from an array of structs for us.
+Having offsets as a tensor mapped dimension label can help us with combining `elementwise` [scores](https://blog.vespa.ai/introducing-layered-ranking-for-rag-applications/).
 An obvious downside is that the feed container node uses more CPU to serialize and deserialize the tensor value.
 But overall, a nice hack!
