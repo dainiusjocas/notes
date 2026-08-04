@@ -1,0 +1,23 @@
+schema doc {
+  document doc {
+    struct chunk {
+      field embedding type tensor<float>(x[1]) {}
+    }
+    field chunks type array<chunk> {
+      indexing: summary
+    }
+  }
+  field embeddings type tensor<float>(offset{}, x[1]) {
+    indexing {
+      input chunks |
+      for_each{ (get_field embedding | to_string) || "tensor<float>(x[1]):[0]" } |
+      embed deserializer |
+      attribute
+    }
+  }
+  rank-profile default {
+    inputs {
+      query(query) tensor<float>(x[1])
+    }
+  }
+}

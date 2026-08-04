@@ -19,6 +19,8 @@ project:
           title: Nested Data Modeling
         - file: vespa/layered-ranking-gotchas.md
           title: Layered Ranking Gotchas
+        - file: vespa/hoist-tensors-hack.md
+          title: Hoisting Tensors to Synthetic Fields Hack
         - file: vespa/devex.md
           title: Bridging the gap between the laptop and production
         - file: vespa/range-filter-ordering.md
