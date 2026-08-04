@@ -68,9 +68,9 @@ For this to work, the services.xml should have:
            bundle="hoist-tensor">
 </component>
 ```
-under `<container>` tag.
+under the `<container>` tag.
 
-Which points to the `DeserializerEmbedder` class:
+The component points to the `DeserializerEmbedder` class:
 ```java
 public class DeserializerEmbedder implements Embedder {
     @Override
@@ -84,18 +84,21 @@ public class DeserializerEmbedder implements Embedder {
 }
 ```
 
-Which is packaged in to the `hoist-tensor` bundle.
+Which is packaged in to the `hoist-tensor` bundle as specified in the `pom.xml`.
 Et voilà!
 
+### Offsets and empty values 
+
 Note that `offset` is not going to have "gaps" in the tensor. because the `embed` expression [filters out empty strings](https://github.com/vespa-engine/vespa/blob/b5c6717954f9ff8bf08246346e0e9e6aee0ba22f/indexinglanguage/src/main/java/com/yahoo/vespa/indexinglanguage/expressions/EmbedExpression.java#L420-L429).
-So, in case your chunk struct doesn't have an embedding, then make sure to put a default string there, e.g.:
+So, in case your chunk struct doesn't have an embedding, then make sure to put a default string in there, e.g.:
 ```text
 for_each{ (get_field embedding | to_string) || "tensor<float>(x[1]):[0]" } |
 ```
+Ugly, requires special handling later in the ranking, but works.
 
 ## Demo
 
-Let's feed a document with three chunks into Vespa:
+Let's feed a document with three chunks and immediately visit it::
 ```shell
 echo '
 {
@@ -111,7 +114,7 @@ echo '
 | jq -c | vespa feed -
 vespa visit --field-set="doc:embeddings" | jq
 ```
-Whic gives:
+Which gives:
 ```json
 {
   "id": "id:doc:doc::1",
@@ -127,15 +130,42 @@ Whic gives:
   }
 }
 ```
-Note that mapped dimension labels are offsets within the source document.
+Note that mapped dimension labels are offsets within the source document, no relation to values.
 
-And your NN queries now works:
+And your NN queries now work:
 
 ```shell
 vespa query \
   'select * from sources doc where {targetHits: 1}nearestNeighbor(embeddings, query)' \
   'input.query(query)=[1.0]' \
   'ranking.profile=default'
+```
+
+The full schema:
+```text
+schema doc {
+  document doc {
+    struct chunk {
+      field embedding type tensor<float>(x[1]) {}
+    }
+    field chunks type array<chunk> {
+      indexing: summary
+    }
+  }
+  field embeddings type tensor<float>(offset{}, x[1]) {
+    indexing {
+      input chunks |
+      for_each{ (get_field embedding | to_string) || "tensor<float>(x[1]):[0]" } |
+      embed deserializer |
+      attribute
+    }
+  }
+  rank-profile default {
+    inputs {
+      query(query) tensor<float>(x[1])
+    }
+  }
+}
 ```
 
 ## Conclusion
