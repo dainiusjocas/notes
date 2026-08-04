@@ -46,7 +46,7 @@ Nice, offset handling are already done for us.
 
 So, what if in the indexing language we serialize the tensors we have in the array of structs into  astring, then pass that string into a custom `Embedder`, in the embedder we just deserialize the tensor, profit!
 
-The demo application is here.
+The demo application is [here](https://github.com/dainiusjocas/notes/pull/30).
 
 ### Implementation details
 
