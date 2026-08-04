@@ -1,5 +1,5 @@
 ---
-thumbnail: _static/nested-data-modeling.png
+thumbnail: _static/layered-ranking-gotchas.png
 title: Layered Ranking Gotchas 
 date: 2026-08-01
 ---
