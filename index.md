@@ -8,7 +8,7 @@ site:
 
 # About this site
 
-> I must end the day a bit cleverer that I've started.
+> I must end the day a bit cleverer than I've started.
 > 
 Here are the main topics that occupy my brain.
 
