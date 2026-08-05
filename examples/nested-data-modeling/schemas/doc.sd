@@ -26,8 +26,8 @@ schema doc {
       input chunks |
       for_each {
         get_field entities |
-        join " " | # join the array of chunk entities
-      }
+        join " "
+      } | # join the array of chunk entities
       join " " |   # join joined entities from all chunks
       split " " |  # split into individual entity strings
       attribute    # exact matching
