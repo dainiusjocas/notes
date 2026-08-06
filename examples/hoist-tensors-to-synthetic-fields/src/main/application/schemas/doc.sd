@@ -2,6 +2,7 @@ schema doc {
   document doc {
     struct chunk {
       field embedding type tensor<float>(x[1]) {}
+      field sentiment type int {}
     }
     field chunks type array<chunk> {
       indexing: summary
@@ -13,6 +14,16 @@ schema doc {
       for_each{ (get_field embedding | to_string) || "tensor<float>(x[1]):[0]" } |
       embed deserializer |
       attribute
+    }
+  }
+  # Mapped Tensor with sentiments by offset in an array
+  field sentiment type tensor<float>(offset{}) {
+    indexing {
+        input chunks |
+        for_each{ (get_field sentiment | to_string) || "0" } |
+        join "," |
+        embed numeric |
+        attribute
     }
   }
   rank-profile default {

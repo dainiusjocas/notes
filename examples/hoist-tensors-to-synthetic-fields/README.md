@@ -21,9 +21,9 @@ echo '
   "id": "id:doc:doc::1",
   "fields": {
     "chunks": [
-      {"embedding": [3]},
-      {"embedding": [2]},
-      {"embedding": [1]}
+      {"embedding": [3], "sentiment": 10},
+      {"embedding": [2], "sentiment": 20},
+      {"embedding": [1], "sentiment": 30}
     ]
   }
 }' \
