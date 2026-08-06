@@ -5,12 +5,22 @@ schema doc {
     }
     struct chunk {
       field text type string {}
+      field id type string {}
+      field sentiment type float {}
       field entities type array<string> {}
       field chunk_index type int {}
       field chunk_tensor type tensor<float>(x[1]) {}
     }
     field chunks type array<chunk> {
       indexing: summary
+      struct-field id {
+          indexing: attribute
+          attribute: fast-search
+      }
+      struct-field sentiment {
+          indexing: attribute
+          attribute: fast-search
+      }
       struct-field chunk_index {
           indexing: attribute
           attribute: fast-search
@@ -31,6 +41,11 @@ schema doc {
       join " " |   # join joined entities from all chunks
       split " " |  # split into individual entity strings
       attribute    # exact matching
+    }
+  }
+  rank-profile default {
+    summary-features {
+      tensorFromStructs(attribute(chunks), chunk_index, sentiment, double)
     }
   }
   # Doesn't work, needs an embedder component `tensor_parser` registered

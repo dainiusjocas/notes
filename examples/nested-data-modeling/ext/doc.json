@@ -6,6 +6,8 @@
       {
         "text": "intro",
         "chunk_index": 1,
+        "id": "10",
+        "sentiment": 1.2,
         "chunk_tensor": [1],
         "entities": ["person1", "location1"]
       },
@@ -13,6 +15,8 @@
         "text": "outro",
         "chunk_index": 2,
         "chunk_tensor": [2],
+        "id": "20",
+        "sentiment": 3.4,
         "entities": ["date1", "org1"]
       }
     ]
