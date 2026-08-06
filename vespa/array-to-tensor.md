@@ -81,7 +81,8 @@ field sentiment type tensor<float>(offset{}) {
 
 Et voila!
 
-Full demo can be found [here](https://github.com/dainiusjocas/notes/pull/31).
+A full demo can be found [here](https://github.com/dainiusjocas/notes/pull/31).
+
 ## Discussion
 
 The primary solution should reach for should be to construct the tensor in the feeding pipeline, outside Vespa.
