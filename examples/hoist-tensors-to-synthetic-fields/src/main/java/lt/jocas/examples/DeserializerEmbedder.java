@@ -18,23 +18,22 @@ public class DeserializerEmbedder implements Embedder {
      * Converts a serialized tensor into a tensor.
      * In case the target type differs in one dimension, renames the dimension.
      * @param text serialized tensor.
-     * @param context the context which may influence an embedder's behavior
+     * @param context the context that may influence an embedder's behavior
      * @param tensorType the type of the tensor to be returned
-     * @return
+     * @return parsed and adapted tensor.
      */
     @Override
     public Tensor embed(String text, Context context, TensorType tensorType) {
         var parsed = Tensor.from(text);
-        if (parsed.type().equals(tensorType)) {
-            return parsed;
-        } else {
-            // only handles 1-dimensional tensor case, i.e., rename
-            if (parsed.type().dimensionNames().size() == 1 && tensorType.dimensions().size() == 1) {
-                return parsed.rename(
-                        parsed.type().dimensions().get(0).name(),
-                        tensorType.dimensions().get(0).name());
-            }
+        var parsedType = parsed.type();
+
+        if (parsedType.equals(tensorType)) return parsed;
+
+        if (parsedType.dimensions().size() == 1 && tensorType.dimensions().size() == 1) {
+            return parsed.rename(
+                    parsed.type().dimensions().get(0).name(),
+                    tensorType.dimensions().get(0).name());
         }
-        throw new IllegalArgumentException("Cannot convert tensor from " + parsed.type() + " to " + tensorType);
+        throw new IllegalArgumentException("Cannot convert tensor from " + parsedType + " to " + tensorType);
     }
 }
