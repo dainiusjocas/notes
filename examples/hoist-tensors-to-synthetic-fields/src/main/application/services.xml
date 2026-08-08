@@ -6,6 +6,10 @@
                class="lt.jocas.examples.DeserializerEmbedder"
                bundle="hoist-tensor">
     </component>
+    <component id="numeric"
+               class="lt.jocas.examples.NumberEmbedder"
+               bundle="hoist-tensor">
+    </component>
     <document-api/>
     <search/>
   </container>

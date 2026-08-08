@@ -21,9 +21,9 @@ echo '
   "id": "id:doc:doc::1",
   "fields": {
     "chunks": [
-      {"embedding": [3]},
-      {"embedding": [2]},
-      {"embedding": [1]}
+      {"embedding": [3], "sentiment": 10},
+      {"embedding": [2], "sentiment": 20},
+      {"embedding": [1], "sentiment": 30}
     ]
   }
 }' \
@@ -109,3 +109,54 @@ Which returns:
 Voila!
 
 Why `embedding` field values are base64 encoded?
+
+## Partial updates catch
+
+Let's try partial update:
+```shell
+echo '
+{
+  "create": true,
+  "update": "id:doc:doc::1",
+  "fields": {
+    "chunks": {
+      "add": [
+        {"embedding": [5], "sentiment": 50}
+      ]
+    }
+  }
+}' \
+| jq -c | vespa feed -
+```
+
+
+```shell
+vespa visit --field-set="doc:sentiment_array,sentiment" | jq
+```
+
+```json
+{
+  "id": "id:doc:doc::1",
+  "fields": {
+    "sentiment": {
+      "type": "tensor<float>(offset{})",
+      "cells": {
+        "0": 10.0,
+        "1": 20.0,
+        "2": 30.0
+      }
+    },
+    "sentiment_array": [
+      10,
+      20,
+      30,
+      50
+    ]
+  }
+}
+```
+
+Note that the `sentiment_array` got the update, which `sentiment` tensor field hasn't received the update.
+This is not specific to the embedder hacks.
+
+One way to get the tensor updated would be to trigger reindexing.
