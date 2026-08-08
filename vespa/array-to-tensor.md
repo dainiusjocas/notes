@@ -88,12 +88,11 @@ A full demo can be found [here](https://github.com/dainiusjocas/notes/pull/31).
 The primary solution should reach for should be to construct the tensor in the feeding pipeline, outside Vespa.
 But that is not always possible due to system ownership and the stage of the PoC nuances.
 
-Yet another proper way is to solve it is with a custom document processor.
+Another proper way to solve it is with a custom document processor.
 You know, get the value of the source field, encode it as a tensor, make sure that the types align, wire it in, and test the setup end to end.
 But that is a lot of detailed and fairly complex work.
-Also, how about partial updates? Docproc doesn't know about it.
 
-An alternative way to solve the problem is to shift the work into ranking expressions.
+Yet another way is to shift the work into ranking expressions.
 Something like this:
 ```text
 reduce(
@@ -103,7 +102,7 @@ reduce(
   chunk_index
 )
 ```
-gives you the tensor of the required type.
+Gives you the tensor of the required type.
 Schema needs an array of structs and a document level array to create a mapper into offsets.
 But even then, Vespa needs to allocate multiple tensors at ranking time, which is not very efficient.
 
@@ -111,6 +110,6 @@ But even then, Vespa needs to allocate multiple tensors at ranking time, which i
 
 Layered ranking is a powerful feature of Vespa.
 But for many aspects you're on your own to implement the details.
-It is clearly an abuse of the `Embedder` interface, but it gets the job done.
+It is an abuse of the `Embedder` interface, but it gets the job done.
 
 What I'd like for Vespa 

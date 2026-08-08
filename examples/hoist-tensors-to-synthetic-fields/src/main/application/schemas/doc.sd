@@ -26,6 +26,9 @@ schema doc {
         attribute
     }
   }
+  field sentiment_array type array<int> {
+    indexing: input chunks | for_each{ get_field sentiment } | attribute
+  }
   rank-profile default {
     inputs {
       query(query) tensor<float>(x[1])
