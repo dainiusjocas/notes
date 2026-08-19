@@ -1,0 +1,26 @@
+schema doc {
+  document doc {
+    struct chunk {
+      field text type string {}
+      field sentiment type int {}
+    }
+    field chunks type array<chunk> {
+      indexing: summary
+    }
+  }
+  # truncate to just 1 dense dimension for simplicity
+  field embeddings type tensor<float>(offset{}, x[1]) {
+    indexing {
+      input chunks |
+      for_each{ get_field text } |
+      embed e5 |
+      attribute
+    }
+    attribute {
+        distance-metric: angular
+    }
+  }
+  field text type array<string> {
+    indexing: input chunks | for_each{ get_field text } | index
+  }
+}
