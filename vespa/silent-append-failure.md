@@ -98,7 +98,7 @@ Which gives:
 Note: no `embeddings` field!
 While `text` field is correctly appended.
 
-See the full app here.
+See the full app [here](https://github.com/dainiusjocas/notes/pull/33).
 
 Why? Most likely because [here](https://github.com/vespa-engine/vespa/blob/a63787265645cb9f7ed3599c29e003b2b3851eca/indexinglanguage/src/main/java/com/yahoo/vespa/indexinglanguage/FieldUpdateFieldValues.java#L136-L138) the value is not handled.
 And if the label is an offset, then there is nothing to do:
