@@ -1,0 +1,46 @@
+schema doc {
+  document doc {
+    field title type string {
+      indexing: index
+    }
+    struct chunk {
+      field text type string {}
+      field id type string {}
+      field sentiment type float {}
+      field entities type array<string> {}
+      field chunk_index type int {}
+      field chunk_tensor type tensor<float>(x[1]) {}
+    }
+    field chunks type array<chunk> {
+      indexing: summary
+      struct-field id {
+          indexing: attribute
+          attribute: fast-search
+      }
+      struct-field sentiment {
+          indexing: attribute
+          attribute: fast-search
+      }
+      struct-field chunk_index {
+          indexing: attribute
+          attribute: fast-search
+      }
+    }
+  }
+  field text type array<string> {
+    indexing: input chunks | for_each{ get_field text } | index
+  }
+  document-summary chunk_selection {
+    summary text {
+      select-elements-by: chunk_selector
+    }
+  }
+  rank-profile default {
+    function chunk_selector() {
+      expression: elementwise(bm25(text), dimension, float)
+    }
+    summary-features {
+      chunk_selector
+    }
+  }
+}
