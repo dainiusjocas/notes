@@ -11,6 +11,8 @@ project:
     - title: Vespa
       file: vespa/README.md
       children:
+        - file: vespa/asymmetric-ranking-optimization.md
+          title: Optimize Asymmetric Re-ranking with Algebra
         - file: vespa/hybrid-search-enn-weakand.md
           title: Strategic Query Shaping for Vespa Hybrid Search
         - file: vespa/filter_subspaces-threshold-trick.md
