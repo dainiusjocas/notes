@@ -112,10 +112,10 @@ first phase rank profiling for thread #0 (total time was 365.990 ms)
 │       1 │   0.000 │ rank feature query(query)              │
 └─────────┴─────────┴────────────────────────────────────────┘
 ```
-Nice, from 562.884 ms down to 365.990 ms, -35%!
+Nice, from 562.884 ms down to 365.990 ms, -35% of isolated ranking expression improvement.
 Which puts asymmetric re-ranking for 1M docs at 97ms.
 
-NOTE: Latency without profiling is ~193 ms,
+When comparing non-profiled latencies end-to-end, the improvement is ~28% (267ms → 193ms).
 
 ### Constant-folding
 
@@ -236,21 +236,59 @@ So, expecting the latency to go <50 ms is pretty reasonable.
 
 But where in the [retrieval funnel](https://learn.vespa.ai/reranking-ltr/multiphase-ranking/#the-ranking-pipeline) to put the asymmetric re-ranking?
 You should design ranking phases so that the 1st phase can comfortably run on ~million of [documents](https://learn.vespa.ai/reranking-ltr/multiphase-ranking/) single threaded within your latency and compute budget.
-If your total latency budget is 50ms, be careful with retrievers, but if you target about 500ms, then IMHO all good. 
+If your total latency budget is 50 ms, be careful with retrievers, but if you target about 500 ms, then IMHO all good.
 Scores like BM25 (single digit ms) and scalar operations are typically fine in the 1st phase.
 
-2nd phase is a safe place to put the asymmetric re-ranking as it should do <1000 docs per node.
-Global-phase is a bad idea, because that means transferring tensor data over the network.
+2nd phase is a safe place to put the asymmetric re-ranking as it should do <1000 docs per node/thread.
+Global-phase is a bad idea because that means transferring tensor data over the network.
+
+Also, worth mentioning that the brute-force exact nearest neighbors matching produces a [predictable number of documents](exact-nearest-neighbor-and-target-hits.md) for the 1st phase ranking:
+
+$$
+targethits(1 + ln(matched_doc_count/targetHits))
+$$
 
 ## Next steps
 
-How about layered-ranking when you have multiple embeddings per document?
+Some ideas for future work:
+* How about [layered-ranking](https://blog.vespa.ai/introducing-layered-ranking-for-rag-applications/) when you have multiple embeddings per document? Does batching BQ embeddings help or harm the 1st phase ranking?
+* Is there any algebraic rewrite when we execute multiple nearest neighbor queries in one request?
+* Benchmark the recall improvements of the asymmetric re-ranking.
 
 ## Summary
 
 Asymmetric scoring is an approachable option to fight back some recall loss due to binary quantization.
-Algebraic rewriting of a ranking expression reduced the latency by 35%: all done in user space!
-While rewriting, we've learned a neat trick about constant-folding of ranking expressions.
+Algebraic rewriting of a ranking expression reduced the latency by 28%: all done in user space!
+While rewriting, we've learned a little neat trick about constant-folding of ranking expressions.
 Also, peeked at the code of the `unpack_bits` function.
 And identified a couple of optimizations that could make asymmetric reranking even cheaper.
-Hope, you enjoyed this post as much as I did writing it!
+Hope you enjoyed this post as much as I did writing it!
+
+### P.S.
+
+[Performance testing](https://www.browserstack.com/guide/load-testing-vs-stress-testing-vs-performance-testing), i.e., under idea conditions how fast it can be, was done on 13th Gen Intel(R) Core(TM) i9-13900K, 64GB RAM. The same query was used in all benchmarks. It was run 10 times sequentially, and the trace of the fastest response was taken.
+
+```text
+Architecture:                x86_64
+  CPU op-mode(s):            32-bit, 64-bit
+  Address sizes:             46 bits physical, 48 bits virtual
+  Byte Order:                Little Endian
+CPU(s):                      32
+  On-line CPU(s) list:       0-31
+Vendor ID:                   GenuineIntel
+  Model name:                13th Gen Intel(R) Core(TM) i9-13900K
+    CPU family:              6
+    Model:                   183
+    Thread(s) per core:      2
+    Core(s) per socket:      24
+    Socket(s):               1
+    Stepping:                1
+    CPU(s) scaling MHz:      19%
+    CPU max MHz:             5800.0000
+    CPU min MHz:             800.0000
+    BogoMIPS:                5990.40
+    Flags:                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cp
+                             l vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 e
+                             rms invpcid rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_cl
+                             ear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities
+```
