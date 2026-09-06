@@ -248,10 +248,36 @@ $$
 targethits(1 + ln(matched_doc_count/targetHits))
 $$
 
+## Layered-ranking
+
+When you have multiple chunks per document, and you want to take the max similarity for doc level scoring.
+I.e., the case when the query is `tensor<float>(x[N])` and the document is `tensor<int8>(chunk{}, x[N])`.
+
+```text
+function query_bit_sum() {
+    # computed once per search query
+    expression: (1 - sum(query(query))) / 2
+}
+function max_chunk_dot() {
+    # Use the embeddings_bin field tensors, take max
+    expression {
+        reduce(
+            sum(query(query) * unpack_bits(attribute(embeddings_bin)), x),
+            max, chunk
+        )
+    }
+}
+function closeness_score() {
+    expression: max_chunk_dot() + query_bit_sum()
+}
+```
+
+NOTE: the expression also contains `sum(query(query) * unpack_bits(attribute(embeddings_bin))` which could be the target for the fused operation.
+But `attribute(embeddings_bin)` is now a mixed tensor.
+
 ## Next steps
 
 Some ideas for future work:
-* How about [layered-ranking](https://blog.vespa.ai/introducing-layered-ranking-for-rag-applications/) when you have multiple embeddings per document? Does batching BQ embeddings help or harm the 1st phase ranking?
 * Is there any algebraic rewrite when we execute multiple nearest neighbor queries in one request?
 * Benchmark the recall improvements of the asymmetric re-ranking.
 
