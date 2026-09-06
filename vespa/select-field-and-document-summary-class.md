@@ -1,4 +1,5 @@
 ---
+thumbnail: _static/select-field-and-document-summary-class.png
 title: Notes on Summary Fetching
 date: 2026-09-07
 ---
