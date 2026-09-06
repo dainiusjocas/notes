@@ -11,6 +11,8 @@ project:
     - title: Vespa
       file: vespa/README.md
       children:
+        - file: vespa/select-field-and-document-summary-class.md
+          title: Notes on Summary Fetching
         - file: vespa/asymmetric-ranking-optimization.md
           title: Optimize Asymmetric Re-ranking with Algebra
         - file: vespa/hybrid-search-enn-weakand.md
@@ -58,6 +60,8 @@ project:
     YQL: Yahoo! Query Language
     HNSW: Hierarchical Navigable Small World Graph Index
     CLI: Command Line Interface
+    LRU: Least Recently Used
+    DSC: Document Summary Class
   # github:
   # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
 site:
