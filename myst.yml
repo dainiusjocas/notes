@@ -11,6 +11,8 @@ project:
     - title: Vespa
       file: vespa/README.md
       children:
+        - file: vespa/vespa-live-2026-london.md
+          title: Vespa Live 2026 Talk Transcript
         - file: vespa/select-field-and-document-summary-class.md
           title: Notes on Summary Fetching
         - file: vespa/asymmetric-ranking-optimization.md
