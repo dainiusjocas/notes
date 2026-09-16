@@ -64,6 +64,10 @@ project:
     CLI: Command Line Interface
     LRU: Least Recently Used
     DSC: Document Summary Class
+    NLP: Natural Language processing
+    API: Application Programming Interface
+    BQ: Binary Quantization
+    QPS: Queries Per Second
   # github:
   # To autogenerate a Table of Contents, run "jupyter book init --write-toc"
 site:
