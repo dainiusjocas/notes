@@ -1,0 +1,12 @@
+base     rerank=100  warm        qps    9945 | avg   0.79 | p50   0.80 p90   0.90 p99   1.50 p99.9   2.10 ms | major faults/query    0.0
+prefetch rerank=100  warm        qps    9426 | avg   0.84 | p50   0.80 p90   1.00 p99   1.90 p99.9   4.30 ms | major faults/query    0.0
+base     rerank=1000 warm        qps    6494 | avg   1.22 | p50   1.20 p90   1.30 p99   1.90 p99.9   2.70 ms | major faults/query    0.0
+prefetch rerank=1000 warm        qps    4549 | avg   1.75 | p50   1.70 p90   2.30 p99   2.70 p99.9   3.50 ms | major faults/query    0.0
+base     rerank=100  evict/0.25s qps     576 | avg  13.85 | p50  15.80 p90  17.40 p99  18.90 p99.9  21.40 ms | major faults/query   22.9
+prefetch rerank=100  evict/0.25s qps    7386 | avg   1.07 | p50   0.90 p90   1.50 p99   2.60 p99.9   4.60 ms | major faults/query    0.1
+base     rerank=1000 evict/0.25s qps      66 | avg 122.05 | p50 126.55 p90 131.60 p99 133.70 p99.9 145.84 ms | major faults/query  235.6
+prefetch rerank=1000 evict/0.25s qps    1284 | avg   6.22 | p50   5.20 p90   6.20 p99  62.40 p99.9 108.43 ms | major faults/query    3.5
+base     rerank=100  evict/2s    qps    1116 | avg   7.13 | p50   4.00 p90  16.80 p99  18.20 p99.9  21.20 ms | major faults/query    7.9
+prefetch rerank=100  evict/2s    qps    9369 | avg   0.84 | p50   0.80 p90   1.00 p99   1.90 p99.9   4.10 ms | major faults/query    0.0
+base     rerank=1000 evict/2s    qps      70 | avg 113.48 | p50 127.40 p90 130.70 p99 132.69 p99.9 134.20 ms | major faults/query  206.7
+prefetch rerank=1000 evict/2s    qps    3120 | avg   2.55 | p50   2.10 p90   4.80 p99   6.20 p99.9  33.15 ms | major faults/query    0.5
