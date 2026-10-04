@@ -1,0 +1,41 @@
+# Python driver (bench.py) results. NOTE: the "concurrent" sections are client-bound (Python GIL with 8
+# threads; client latency ~7 ms above proton's searchtime) and not reliable - see results-fbench.txt for
+# concurrent load measured with vespa-fbench. The sequential cold/warm sections are valid.
+=== round 1: sequential, cold (evict before every query)
+base      rerank=  100 cold          n=  200: latency p50   12.29 p90   20.34 p99   26.40 ms | searchtime p50   11.0 p99   22.0 ms | major faults/query   148.4
+prefetch  rerank=  100 cold          n=  200: latency p50    3.79 p90    9.46 p99   11.84 ms | searchtime p50    3.0 p99    9.0 ms | major faults/query     0.0
+base      rerank= 1000 cold          n=  200: latency p50  108.08 p90  116.39 p99  129.98 ms | searchtime p50  106.0 p99  128.0 ms | major faults/query  1495.9
+prefetch  rerank= 1000 cold          n=  200: latency p50    6.29 p90   10.80 p99   19.65 ms | searchtime p50    6.0 p99   17.0 ms | major faults/query     0.0
+=== round 1: sequential, warm (swapfile in page cache)
+base      rerank=  100 warm          n=  500: latency p50    1.76 p90    5.37 p99    6.83 ms | searchtime p50    1.0 p99    4.0 ms | major faults/query     0.0
+prefetch  rerank=  100 warm          n=  500: latency p50    1.38 p90    4.86 p99    6.62 ms | searchtime p50    1.0 p99    4.0 ms | major faults/query     0.0
+base      rerank= 1000 warm          n=  500: latency p50    1.66 p90    4.60 p99    6.76 ms | searchtime p50    1.0 p99    4.0 ms | major faults/query     0.0
+prefetch  rerank= 1000 warm          n=  500: latency p50    2.31 p90    6.98 p99    8.62 ms | searchtime p50    2.0 p99    6.0 ms | major faults/query     0.0
+=== round 1: concurrent, 8 clients, 30 s
+base      rerank=  100 c=8 warm      n=28419: latency p50    8.40 p90   15.28 p99   21.66 ms | searchtime p50    2.0 p99    4.0 ms | major faults/query     0.0 |  947.3 qps
+base      rerank=  100 c=8 evict/0.25s n=22625: latency p50    9.99 p90   18.48 p99   24.77 ms | searchtime p50    3.0 p99   17.0 ms | major faults/query    53.6 |  754.2 qps
+prefetch  rerank=  100 c=8 warm      n=25534: latency p50    9.59 p90   15.72 p99   21.96 ms | searchtime p50    2.0 p99    4.0 ms | major faults/query     0.0 |  851.1 qps
+prefetch  rerank=  100 c=8 evict/0.25s n=35825: latency p50    5.44 p90   12.98 p99   19.66 ms | searchtime p50    2.0 p99    7.0 ms | major faults/query     1.6 | 1194.2 qps
+base      rerank= 1000 c=8 warm      n=57492: latency p50    3.26 p90    7.61 p99   13.59 ms | searchtime p50    1.0 p99    4.0 ms | major faults/query     0.0 | 1916.4 qps
+base      rerank= 1000 c=8 evict/0.25s n= 2417: latency p50  107.19 p90  119.88 p99  130.82 ms | searchtime p50  105.0 p99  128.0 ms | major faults/query  1289.1 |   80.6 qps
+prefetch  rerank= 1000 c=8 warm      n=89342: latency p50    2.59 p90    3.46 p99    4.73 ms | searchtime p50    1.0 p99    2.0 ms | major faults/query     0.0 | 2978.1 qps
+prefetch  rerank= 1000 c=8 evict/0.25s n=22793: latency p50    4.61 p90   16.54 p99  151.97 ms | searchtime p50    4.0 p99  151.0 ms | major faults/query    38.2 |  759.8 qps
+=== round 2: sequential, cold (evict before every query)
+base      rerank=  100 cold          n=  200: latency p50   15.04 p90   16.45 p99   20.29 ms | searchtime p50   13.0 p99   17.0 ms | major faults/query   149.9
+prefetch  rerank=  100 cold          n=  200: latency p50    6.03 p90    7.02 p99    7.84 ms | searchtime p50    4.0 p99    5.0 ms | major faults/query     0.0
+base      rerank= 1000 cold          n=  200: latency p50  106.70 p90  112.76 p99  121.45 ms | searchtime p50  104.0 p99  120.0 ms | major faults/query  1500.7
+prefetch  rerank= 1000 cold          n=  200: latency p50    6.10 p90   11.66 p99   19.59 ms | searchtime p50    5.0 p99   18.0 ms | major faults/query     0.0
+=== round 2: sequential, warm (swapfile in page cache)
+base      rerank=  100 warm          n=  500: latency p50    3.94 p90    5.37 p99    6.22 ms | searchtime p50    2.0 p99    4.0 ms | major faults/query     0.0
+prefetch  rerank=  100 warm          n=  500: latency p50    1.35 p90    5.09 p99    6.08 ms | searchtime p50    1.0 p99    3.0 ms | major faults/query     0.0
+base      rerank= 1000 warm          n=  500: latency p50    3.70 p90    5.93 p99    6.91 ms | searchtime p50    2.0 p99    4.0 ms | major faults/query     0.0
+prefetch  rerank= 1000 warm          n=  500: latency p50    1.49 p90    1.75 p99    2.23 ms | searchtime p50    1.0 p99    2.0 ms | major faults/query     0.0
+=== round 2: concurrent, 8 clients, 30 s
+base      rerank=  100 c=8 warm      n=26005: latency p50    9.44 p90   15.61 p99   21.81 ms | searchtime p50    2.0 p99    4.0 ms | major faults/query     0.0 |  866.8 qps
+base      rerank=  100 c=8 evict/0.25s n=24242: latency p50    9.48 p90   17.91 p99   24.60 ms | searchtime p50    3.0 p99   16.0 ms | major faults/query    50.5 |  808.1 qps
+prefetch  rerank=  100 c=8 warm      n=24153: latency p50   10.05 p90   15.85 p99   21.92 ms | searchtime p50    2.0 p99    4.0 ms | major faults/query     0.0 |  805.1 qps
+prefetch  rerank=  100 c=8 evict/0.25s n=33601: latency p50    6.08 p90   13.47 p99   19.92 ms | searchtime p50    2.0 p99    7.0 ms | major faults/query     1.6 | 1120.0 qps
+base      rerank= 1000 c=8 warm      n=58899: latency p50    3.16 p90    7.45 p99   13.70 ms | searchtime p50    1.0 p99    4.0 ms | major faults/query     0.0 | 1963.3 qps
+base      rerank= 1000 c=8 evict/0.25s n= 2417: latency p50  108.04 p90  119.20 p99  131.06 ms | searchtime p50  106.0 p99  128.0 ms | major faults/query  1286.1 |   80.6 qps
+prefetch  rerank= 1000 c=8 warm      n=89857: latency p50    2.57 p90    3.43 p99    4.73 ms | searchtime p50    1.0 p99    2.0 ms | major faults/query     0.0 | 2995.2 qps
+prefetch  rerank= 1000 c=8 evict/0.25s n=23283: latency p50    4.47 p90   16.70 p99  134.83 ms | searchtime p50    4.0 p99  134.0 ms | major faults/query    36.0 |  776.1 qps

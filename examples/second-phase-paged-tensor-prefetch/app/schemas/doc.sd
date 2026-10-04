@@ -1,0 +1,39 @@
+schema doc {
+    document doc {
+        field id type int {
+            indexing: attribute | summary
+        }
+        field bucket type int {
+            indexing: attribute
+            attribute: fast-search
+        }
+        field score type float {
+            indexing: attribute
+        }
+        field emb type tensor<float>(x[768]) {
+            indexing: attribute
+            attribute: paged
+        }
+    }
+    document-summary minimal {
+        summary id {}
+    }
+    rank-profile base {
+        num-threads-per-search: 1
+        inputs {
+            query(q) tensor<float>(x[768])
+        }
+        first-phase {
+            expression: attribute(score)
+        }
+        second-phase {
+            expression: sum(query(q) * attribute(emb))
+            rerank-count: 100
+        }
+    }
+    rank-profile prefetch inherits base {
+        rank-properties {
+            vespa.rank.secondphase.prefetch_attributes: "emb"
+        }
+    }
+}
